@@ -20,8 +20,7 @@ export type ConstantsType = {
   STATES: "states";
   STATE_VARIABLES: "state_variables";
   RADIO_VARIABLES: "radio_variables";
-  SCHEDULING: "schedulings";
-  SCHEDULING_HISTORY: "scheduling_historys";
+  SCHEDULINGS: "schedulings";
 };
 
 export type IQueryFindBase = { column: DbTables } & QueryWhereCondition;

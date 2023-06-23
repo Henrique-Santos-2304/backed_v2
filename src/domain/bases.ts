@@ -8,6 +8,8 @@ import {
   IQueryUpdateBase,
 } from "./repos";
 
+export type IIsGateway = { isGateway: boolean };
+
 export interface IBaseUseCases<P = any, R = any> {
   execute(params: P): Promise<R>;
 }

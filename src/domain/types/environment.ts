@@ -13,7 +13,11 @@ declare global {
       AWS_CERT_PATH: string;
       AWS_CA_PATH: string;
       AWS_CLIENT_ID: string;
-      TOPICS: string;
+      AWS_CLOUD: string;
+      NEW_AWS_CLOUD: string;
+      AWS_SCHEDULING: string;
+      GATEWAY_CRUD: string;
+      GATEWAY_MESSAGES: string;
       FARM_ID: string;
     }
   }

@@ -138,46 +138,20 @@ export async function up(knex: Knex): Promise<void> {
     });
   });
 
-  await checkExists(knex, DB_TABLES.SCHEDULING, async () => {
-    await knex.schema.createTable("schedulings", (table) => {
+  await checkExists(knex, DB_TABLES.SCHEDULINGS, async () => {
+    await knex.schema.createTable(DB_TABLES.SCHEDULINGS, (table) => {
       table
         .uuid("scheduling_id")
         .primary()
         .defaultTo(knex.raw("(uuid_generate_v4())"));
-
-      table.string("author").notNullable();
-      table.boolean("is_stop").defaultTo(false);
-      table.boolean("is_return").defaultTo(false);
-      table.boolean("power");
-      table.boolean("water");
-      table.enum("direction", ["CLOCKWISE", "ANTI_CLOCKWISE"]);
-      table.integer("percentimeter");
-      table.integer("start_angle").nullable();
-      table.integer("end_angle").nullable();
-
-      table.dateTime("start_timestamp");
-      table.dateTime("end_timestamp");
-      table.dateTime("timestamp").notNullable();
-
-      table
-        .string("pivot_id")
-        .references("pivot_id")
-        .inTable("pivots")
-        .index()
-        .notNullable()
-        .onUpdate("CASCADE")
-        .onDelete("CASCADE");
-    });
-  });
-
-  await checkExists(knex, DB_TABLES.SCHEDULING_HISTORY, async () => {
-    await knex.schema.createTable("scheduling_historys", (table) => {
-      table
-        .uuid("scheduling_history_id")
-        .primary()
-        .defaultTo(knex.raw("(uuid_generate_v4())"));
-      table.string("scheduling_id").nullable();
       table.string("updated");
+      table.boolean("is_board").defaultTo(false);
+      table
+        .enum("status", ["PENDING", "RUNNING", "FINISHED"])
+        .defaultTo("USER");
+      table
+        .enum("type", ["STOP_DATE", "STOP_ANGLE", "FULL_DATE", "FULL_ANGLE"])
+        .defaultTo("USER");
       table.string("author").notNullable();
       table.boolean("is_stop").defaultTo(false);
       table.boolean("is_return").defaultTo(false);
@@ -188,9 +162,9 @@ export async function up(knex: Knex): Promise<void> {
       table.integer("start_angle").nullable();
       table.integer("end_angle").nullable();
       table.string("start_date_of_module", 255).nullable();
-      table.dateTime("start_timestamp");
-      table.dateTime("end_timestamp");
-      table.dateTime("timestamp").notNullable();
+      table.dateTime("start_timestamp").nullable();
+      table.dateTime("end_timestamp").nullable();
+      table.dateTime("timestamp");
 
       table
         .string("pivot_id")

@@ -1,15 +1,21 @@
-import { IBaseRepository, IBaseUseCases } from "@root/domain";
+import { IAppLog, IBaseRepository, IBaseUseCases } from "@root/domain";
 import { IDelUserExecute } from "@root/domain/usecases";
 import { FarmModel, UserModel } from "@root/infra/models";
-import { DB_TABLES } from "@root/shared";
+import { DB_TABLES, INJECTOR_COMMONS, INJECTOR_REPOS } from "@root/shared";
 import { checkDataExists } from "@root/shared/db-helpers";
-import { console } from "@main/composers";
+import { Injector } from "@root/main/injector";
 
 export class DeleteUserUseCase implements IBaseUseCases {
-  constructor(private baseRepo: IBaseRepository) {}
+  #baseRepo: IBaseRepository;
+  #console: IAppLog;
+
+  private initInstances() {
+    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
+  }
 
   private async delUser(user_id: string) {
-    await this.baseRepo.delete({
+    await this.#baseRepo.delete({
       column: DB_TABLES.USERS,
       where: "user_id",
       equals: user_id,
@@ -17,7 +23,7 @@ export class DeleteUserUseCase implements IBaseUseCases {
   }
 
   private async putFarm(farm: FarmModel) {
-    await this.baseRepo.update({
+    await this.#baseRepo.update({
       column: DB_TABLES.FARMS,
       where: "farm_id",
       equals: farm?.farm_id,
@@ -26,7 +32,7 @@ export class DeleteUserUseCase implements IBaseUseCases {
   }
 
   private async getFarmsUserDealer(user_id: string) {
-    const farms = await this.baseRepo.findAllByData({
+    const farms = await this.#baseRepo.findAllByData({
       column: DB_TABLES.FARMS,
       where: "dealer",
       equals: user_id,
@@ -40,7 +46,7 @@ export class DeleteUserUseCase implements IBaseUseCases {
   }
 
   private async getFarmsUserWork(user_id: string) {
-    const farms = await this.baseRepo.findAll<FarmModel>({
+    const farms = await this.#baseRepo.findAll<FarmModel>({
       column: DB_TABLES.FARMS,
     });
 
@@ -57,9 +63,11 @@ export class DeleteUserUseCase implements IBaseUseCases {
   }
 
   execute: IDelUserExecute = async (user_id) => {
-    console.log("Iniciando deleção de usuário");
+    this.initInstances();
+
+    this.#console.log("Iniciando deleção de usuário");
     const user = await checkDataExists<UserModel>(
-      this.baseRepo.findOne,
+      this.#baseRepo.findOne,
       {
         column: DB_TABLES.USERS,
         where: "user_id",
@@ -74,7 +82,7 @@ export class DeleteUserUseCase implements IBaseUseCases {
     }
 
     await this.getFarmsUserWork(user_id);
-    console.log("Finalizando deleção de usuário\n");
+    this.#console.log("Finalizando deleção de usuário\n");
 
     return await this.delUser(user_id);
   };

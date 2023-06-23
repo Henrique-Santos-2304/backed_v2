@@ -1,35 +1,48 @@
 import { UserModel } from "@db/models";
-import { DB_TABLES } from "@root/shared";
+import { DB_TABLES, INJECTOR_COMMONS, INJECTOR_REPOS } from "@root/shared";
 import { MutationUserVO } from "@db/value-objects";
 import { checkDataExists } from "@shared/db-helpers";
 import { IPutUserExecute } from "@contracts/usecases";
-import { console } from "@main/composers";
 
 import {
+  IAppLog,
   IBaseRepository,
   IEncrypt,
   IHashId,
   ITokenValidator,
 } from "@root/domain";
+import { Injector } from "@root/main/injector";
 
 export class UpdateUserUseCase {
-  constructor(
-    private baseRepo: IBaseRepository,
-    private uuid: IHashId,
-    private encrypter: IEncrypt,
-    private jwt: ITokenValidator
-  ) {}
+  #baseRepo: IBaseRepository;
+  #console: IAppLog;
+  #hash: IHashId;
+  #token: ITokenValidator;
+  #encrypter: IEncrypt;
+
+  private initInstances() {
+    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
+
+    this.#token = this.#token ?? Injector.get(INJECTOR_COMMONS.APP_TOKEN);
+    this.#hash = this.#hash ?? Injector.get(INJECTOR_COMMONS.APP_HASH);
+
+    this.#encrypter =
+      this.#encrypter ?? Injector.get(INJECTOR_COMMONS.APP_ENCRYPTER);
+  }
 
   private createEntity(old: UserModel, user: UserModel) {
-    const vo = new MutationUserVO(this.uuid, this.encrypter, this.jwt);
+    const vo = new MutationUserVO(this.#hash, this.#encrypter, this.#token);
     return vo.update(old, user).find();
   }
 
   execute: IPutUserExecute = async (user) => {
-    console.log("Atualizando usuário");
+    this.initInstances();
+
+    this.#console.log("Atualizando usuário");
 
     const exists = await checkDataExists<UserModel>(
-      this.baseRepo.findOne,
+      this.#baseRepo.findOne,
       {
         column: DB_TABLES.USERS,
         where: "user_id",
@@ -41,13 +54,13 @@ export class UpdateUserUseCase {
 
     const newUser = this.createEntity(exists, user);
 
-    const updated = await this.baseRepo.update<UserModel>({
+    const updated = await this.#baseRepo.update<UserModel>({
       column: DB_TABLES.USERS,
       where: "user_id",
       equals: user?.user_id!,
       data: newUser,
     });
-    console.log("Finalizando Atualização de usuário\n");
+    this.#console.log("Finalizando Atualização de usuário\n");
 
     return updated;
   };

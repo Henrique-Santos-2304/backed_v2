@@ -4,7 +4,9 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import CustomParserPlugin from "dayjs/plugin/customParseFormat";
-import { IAppDate } from "@root/domain";
+import AdvancedFormat from "dayjs/plugin/advancedFormat";
+
+import { GetDetailData, IAppDate } from "@root/domain";
 
 export class AppDate implements IAppDate {
   #instance: typeof dayjs;
@@ -16,6 +18,7 @@ export class AppDate implements IAppDate {
   }
 
   private config() {
+    dayjs.extend(AdvancedFormat);
     dayjs.extend(utc);
     dayjs.extend(CustomParserPlugin);
     dayjs.extend(timezone);
@@ -26,11 +29,56 @@ export class AppDate implements IAppDate {
     this.#instance = dayjs;
   }
 
+  handleDateToHistories(date: string, hour: number) {
+    const [day, month, year] = date.split("-");
+    const ha = this.#instance(`${year}-${month}-${day}`)
+      .tz("America/Sao_Paulo")
+      .add(1, "day")
+      .second(0)
+      .hour(hour)
+      .minute(0)
+      .subtract(3, "hour");
+    return ha.toDate();
+  }
+
   toDateSP(date: Date) {
     return this.#instance(date).tz(this.#timezone).toDate();
   }
 
   dateSpString() {
     return this.#instance().format(this.#format);
+  }
+
+  dateNow() {
+    return this.#instance().toDate();
+  }
+
+  toDateSpString(date: Date) {
+    return this.#instance(date).tz(this.#timezone).format(this.#format);
+  }
+
+  catchDiff(date: Date | null) {
+    const diff = this.#instance(date).diff();
+    return Math.round(Math.abs(diff) / 1000);
+  }
+
+  dateIsAter(dateOne?: Date, dateTwo?: Date) {
+    const dateFirst = dateOne ? this.#instance(dateOne) : this.#instance();
+    const dateReceived = dateTwo ? this.#instance(dateTwo) : this.#instance();
+    const dateIsAfter = dateFirst.isSameOrAfter(dateReceived);
+
+    return dateIsAfter;
+  }
+
+  detailsData(date: string | Date): GetDetailData {
+    const dateLocal = this.#instance(date).tz(this.#timezone);
+    return {
+      date: dateLocal.date(),
+      month: dateLocal.month(),
+      year: dateLocal.year(),
+      hour: dateLocal.add(3, "hour").hour(),
+      minute: dateLocal.minute(),
+      second: dateLocal.second(),
+    };
   }
 }

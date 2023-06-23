@@ -1,19 +1,17 @@
+import { INJECTOR_CONTROLS } from "@root/shared";
+import { Injector } from "@root/main/injector";
 import {
+  AllUserController,
   AuthUserController,
   CreateUserController,
   DelUserController,
   PutUserController,
 } from "@controllers/index";
-import {
-  authUserUC,
-  createUserUC,
-  delUserUC,
-  getAllUserUC,
-  putUserUC,
-} from "../usecases/user";
 
-export const createUserController = new CreateUserController(createUserUC);
-export const authUserController = new AuthUserController(authUserUC);
-export const putUserController = new PutUserController(putUserUC);
-export const delUserController = new DelUserController(delUserUC);
-export const allUserController = new AuthUserController(getAllUserUC);
+export const injectUsersControls = async () => {
+  Injector.add(new CreateUserController(), INJECTOR_CONTROLS.USERS.CREATE);
+  Injector.add(new AuthUserController(), INJECTOR_CONTROLS.USERS.AUTH);
+  Injector.add(new PutUserController(), INJECTOR_CONTROLS.USERS.PUT);
+  Injector.add(new DelUserController(), INJECTOR_CONTROLS.USERS.DELETE);
+  Injector.add(new AllUserController(), INJECTOR_CONTROLS.USERS.GET_ALL);
+};

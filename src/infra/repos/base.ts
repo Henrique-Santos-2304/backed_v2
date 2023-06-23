@@ -7,6 +7,8 @@ import {
   IQueryFindBase,
   IQueryFindAllBase,
   IQueryUpdateBase,
+  DbTables,
+  QueryWhereCondition,
 } from "@contracts/repos";
 import { IBaseRepository } from "@contracts/bases";
 import { repositoryAdapter } from "@main/adapters";

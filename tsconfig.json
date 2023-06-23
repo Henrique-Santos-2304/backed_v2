@@ -34,6 +34,8 @@
       "@data/*": ["src/data/*"],
       "@services/*": ["src/data/services/*"],
       "@usecases/*": ["src/data/usecases/*"],
+      "@presenters/*": ["src/presentation/*"],
+
       "@controllers/*": ["src/presentation/controllers/*"],
       "@shared/*": ["src/shared/*"],
       "@core/*": ["src/core/*"]

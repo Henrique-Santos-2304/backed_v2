@@ -1,9 +1,10 @@
 import { UserModel } from "@db/models";
-import { DB_TABLES } from "@shared/index";
-import { console } from "@main/composers";
+import { DB_TABLES, INJECTOR_COMMONS, INJECTOR_REPOS } from "@shared/index";
 import { IAuthUserExecute } from "@root/domain/usecases";
+import { Injector } from "@root/main/injector";
 
 import {
+  IAppLog,
   IBaseRepository,
   IBaseUseCases,
   IEncrypt,
@@ -11,19 +12,26 @@ import {
 } from "@contracts/index";
 
 export class AuthUseCase implements IBaseUseCases {
-  constructor(
-    private baseRepo: IBaseRepository,
-    private encrypt: IEncrypt,
-    private token: ITokenValidator
-  ) {}
+  #console: IAppLog;
+  #baseRepo: IBaseRepository;
+  #encrypter: IEncrypt;
+  #token: ITokenValidator;
+
+  private initInstances() {
+    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#encrypter =
+      this.#encrypter ?? Injector.get(INJECTOR_COMMONS.APP_ENCRYPTER);
+    this.#token = this.#token ?? Injector.get(INJECTOR_COMMONS.APP_TOKEN);
+  }
 
   private async comparePassword(password: UserModel["password"], hash: string) {
-    const isEquals = this.encrypt.compare(password, hash);
+    const isEquals = this.#encrypter?.compare(password, hash);
     if (!isEquals) throw new Error("Invalid Credentials");
   }
 
   private async checkExists(login: UserModel["login"]): Promise<UserModel> {
-    const user = await this.baseRepo.findOne<UserModel>({
+    const user = await this.#baseRepo?.findOne<UserModel>({
       column: DB_TABLES.USERS,
       where: "login",
       equals: login,
@@ -35,17 +43,23 @@ export class AuthUseCase implements IBaseUseCases {
 
   private async generateToken(user: UserModel) {
     const { login, user_id, user_type } = user;
-    return this.token.encrypt({ login, user_id, user_type });
+    return this.#token?.encrypt({
+      login,
+      user_id,
+      user_type,
+    });
   }
 
   execute: IAuthUserExecute = async ({ login, password }) => {
-    console.log(`Iniciando autenticação do usuário ${login}`);
+    this.initInstances();
+
+    this.#console.log(`Iniciando autenticação do usuário ${login}`);
     const user = await this.checkExists(login);
 
     await this.comparePassword(password, user.password);
 
     const token = await this.generateToken(user);
-    console.log(`Usuário logado com sucesso\n`);
+    this.#console.log(`Usuário logado com sucesso\n`);
 
     return { user_id: user?.user_id, user_type: user?.user_type, token };
   };

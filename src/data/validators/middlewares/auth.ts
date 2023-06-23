@@ -1,6 +1,8 @@
+import { IAppLog } from "@root/domain";
+import { Injector } from "@root/main/injector";
+import { INJECTOR_COMMONS } from "@root/shared";
 import express from "express";
 import jwt from "jsonwebtoken";
-import { console } from "@main/composers";
 
 interface TokenInfo {
   user_id: string;
@@ -14,6 +16,7 @@ const authMiddleware = (
   next: express.NextFunction
 ) => {
   try {
+    const console = Injector.get<IAppLog>(INJECTOR_COMMONS.APP_LOGS);
     const token = req.headers.authorization;
     if (!token) {
       console.error("Nenhum token encontrado");
@@ -27,7 +30,6 @@ const authMiddleware = (
       console.error("Token Inválido");
       return res.status(401).send("Unauthorized");
     }
-
     next();
   } catch (err) {
     console.warn("Erro ao checar autenticidade de usuário");

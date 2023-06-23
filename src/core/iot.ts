@@ -1,17 +1,30 @@
-import { IIotConnect } from "@root/domain";
-import { console } from "@composer/index";
+import { IAppLog, IHandlerMessageIot, IIotConnect } from "@root/domain";
+import { Injector } from "@root/main/injector";
+import { INJECTOR_COMMONS } from "@root/shared";
 import { device as Device } from "aws-iot-device-sdk";
 
 export class IotConfig implements IIotConnect {
   #connection: Device;
+  #console: IAppLog;
+  #handlerMessage: IHandlerMessageIot;
 
-  #topics: string[] = [];
+  #topics: string[] = [
+    process.env.AWS_CLOUD,
+    process.env.NEW_AWS_CLOUD,
+    process.env.AWS_SCHEDULING,
+    process.env.GATEWAY_MESSAGES,
+    process.env.GATEWAY_CRUD,
+  ];
 
-  constructor() {}
+  private injectInstances() {
+    this.#console = this.#console || Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#handlerMessage =
+      this.#handlerMessage ||
+      Injector.get(INJECTOR_COMMONS.IOT_HANDLER_MESSAGE);
+  }
 
   private __init__() {
     try {
-      this.#topics = process.env.TOPICS?.split(", ");
       this.#connection = new Device({
         keyPath: process.env.AWS_KEY_PATH!,
         certPath: process.env.AWS_CERT_PATH!,
@@ -26,10 +39,12 @@ export class IotConfig implements IIotConnect {
   }
 
   start() {
+    this.injectInstances();
     if (!this.#connection) this.__init__();
-    console.warn("Conectando ao AWS Iot Core...");
+    this.#console.warn("Conectando ao AWS Iot Core...");
+
     this.#connection?.on("connect", () => {
-      console.warn(`Conexão efetuada com sucesso!   \n`);
+      this.#console.warn(`Conexão efetuada com sucesso!   \n`);
       this.#connection?.subscribe(this.#topics, {
         qos: 0,
       });
@@ -38,38 +53,48 @@ export class IotConfig implements IIotConnect {
     this.#connection?.on(
       "message",
       async (topic: string, payload: ArrayBuffer) => {
-        console.log(`Nova mensagem recebida no tópico ${topic}`);
-        console.log(`${payload.toString()}\n`);
+        this.injectInstances();
+        this.#console.log(`Nova mensagem recebida no tópico ${topic}`);
+        this.#console.log(`${payload.toString()}\n`);
+
+        const response = await this.#handlerMessage.handler(topic, payload);
+
+        if (!response) return;
+
+        await this.publisher(response?.topic, response?.message);
       }
     );
 
     this.#connection?.on("close", () => {
-      console.warn("AWS -> Conexão fechada ");
+      this.#console.warn("AWS -> Conexão fechada ");
     });
 
     this.#connection?.on("offline", () => {
-      console.warn("AWS está offline ");
+      this.#console.warn("AWS está offline ");
     });
 
     this.#connection?.on("error", (error: Error) => {
-      console.warn(`AWS ERRO!!`);
-      console.error(error.message);
+      this.#console.warn(`AWS ERRO!!`);
+      this.#console.error(error.message);
     });
 
     this.#connection?.on("reconnect", async () => {
-      console.warn("AWS Reconectando....");
+      this.#console.warn("AWS Reconectando....");
     });
   }
 
-  async publisher(topic: string, message: string) {
+  async publisher(topic: string, message: any) {
     try {
+      this.injectInstances();
+
       this.#connection?.publish(topic, message);
-      console.log(
-        `${new Date().toString()} Mensagem publicado com sucesso para o tópico ${topic}`
+      this.#console?.log(
+        `Mensagem publicado com sucesso para o tópico ${topic}`
       );
     } catch (err) {
-      console.warn(`Erro ao publicar mensagem no tópico topic ${topic}`);
-      console.error(err.message);
+      const console = Injector.get<IAppLog>(INJECTOR_COMMONS.APP_LOGS);
+      console?.warn(`Erro ao publicar mensagem no tópico topic ${topic}`);
+      console?.error(err.message);
     }
   }
 }

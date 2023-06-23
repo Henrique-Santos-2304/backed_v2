@@ -7,6 +7,5 @@ export const DB_TABLES: ConstantsType = {
   STATES: "states",
   STATE_VARIABLES: "state_variables",
   RADIO_VARIABLES: "radio_variables",
-  SCHEDULING: "schedulings",
-  SCHEDULING_HISTORY: "scheduling_historys",
+  SCHEDULINGS: "schedulings",
 };

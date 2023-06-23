@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { config } from "dotenv";
-import * as composers from "@composer/index";
+import { AppServer } from "./core";
 
 config({
   path:
@@ -15,4 +15,4 @@ config({
       : ".env",
 });
 
-composers.appServer.start();
+new AppServer().start();

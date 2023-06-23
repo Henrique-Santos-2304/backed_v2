@@ -1,16 +1,20 @@
 import { IBaseRepository } from "@root/domain";
 import { UserModel } from "@root/infra/models";
-import { DB_TABLES } from "@root/shared";
+import { Injector } from "@root/main/injector";
+import { DB_TABLES, INJECTOR_REPOS } from "@root/shared";
 import { checkDataExists } from "@root/shared/db-helpers";
 
 export class CheckUserHaveAuthorize {
-  constructor(private readonly baseRepo: IBaseRepository) {}
+  #baseRepo: IBaseRepository;
 
-  private checkUserToHaveAuth(type: UserModel["user_type"]) {}
-
+  private initInstances() {
+    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
+  }
   async start(user_id: string) {
+    this.initInstances();
+
     const user = await checkDataExists<UserModel>(
-      this.baseRepo.findOne,
+      this.#baseRepo?.findOne,
       {
         column: DB_TABLES.USERS,
         where: "user_id",

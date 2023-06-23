@@ -3,7 +3,7 @@ class FarmModel {
 
   users?: string[];
 
-  dealer?: string;
+  dealer: string | null;
 
   user_id: string;
 

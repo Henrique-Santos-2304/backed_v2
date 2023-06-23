@@ -1,16 +1,19 @@
 import { RepositoryAdapterType } from "@contracts/main";
-import { console } from "@main/composers";
+import { IAppLog } from "@root/domain";
+import { INJECTOR_COMMONS } from "@root/shared";
+import { Injector } from "../injector";
 
 const repositoryAdapter: RepositoryAdapterType = async ({
   columnName,
   callback,
 }) => {
   try {
-    console.log(`Abrindo conexão com banco de dados na tabela ${columnName}`);
     return await callback();
   } catch (error) {
-    console.warn("Erro ao criar registro na tabela" + columnName);
-    console.error(error.message);
+    Injector.get<IAppLog>(INJECTOR_COMMONS.APP_LOGS).warn(
+      "Erro banco de dados na tabela " + columnName
+    );
+    Injector.get<IAppLog>(INJECTOR_COMMONS.APP_LOGS).error(error.message);
   }
 };
 

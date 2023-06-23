@@ -1,7 +1,16 @@
 import express from "express";
-import { userRoutes } from "./routes";
+import {
+  farmRoutes,
+  pivotRoutes,
+  schedulingsRoutes,
+  userRoutes,
+} from "./routes";
+import { cyclesRoutes } from "./routes/state";
+import { radioVariablesRoutes } from "./routes/radio-variables";
+import { Injector } from "@root/main/injector";
+import { IBaseController } from "@root/domain";
+import { INJECTOR_CONTROLS } from "@root/shared";
 
-const expressRouters = express.Router();
 function error(
   err: unknown,
   req: express.Request,
@@ -15,14 +24,22 @@ function error(
   next();
 }
 
-expressRouters.use(error);
-expressRouters.use("/users", userRoutes);
+export const expressRouters = () =>
+  express
+    .Router()
+    .use(error)
+    .use("/users", userRoutes())
+    .use("/farms", farmRoutes())
+    .use("/pivots", pivotRoutes())
+    .use("/cycles", cyclesRoutes())
+    .use("/radio_variables", radioVariablesRoutes())
+    .use("/schedulings", schedulingsRoutes())
+    .post(
+      "/actions/create/:id",
+      Injector.get<IBaseController>(INJECTOR_CONTROLS.STATES.ACTION).handle
+    );
 
-export { expressRouters };
-
-/* router.use('/farms', farmRoute);
-router.use('/pivots', pivotRoute);
-router.use('/cycles', cycleRoute);
+/*
 router.use('/states', stateRoute);
 router.use('/schedulings', schedulingRoute);
 router.use('/radio_variables', RadioVariableRoute);

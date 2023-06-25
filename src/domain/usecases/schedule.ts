@@ -9,10 +9,11 @@ export type RequestScheduleCreate = Omit<
 };
 
 export type ISaveSchedule = {
-  schedule: string;
+  schedule: string[];
   is_board: boolean;
   author?: string;
 } & IIsGateway;
+
 export type ICreateSchedulingHistExecute = IBaseUseCases<
   ISaveSchedule,
   SchedulingModel
@@ -21,4 +22,9 @@ export type ICreateSchedulingHistExecute = IBaseUseCases<
 export type IPutSchedulingHistExecute = IBaseUseCases<
   { schedule: SchedulingModel },
   SchedulingModel | string
+>["execute"];
+
+export type IDelSchedulingHistExecute = IBaseUseCases<
+  { scheduling_id: string },
+  void | string
 >["execute"];

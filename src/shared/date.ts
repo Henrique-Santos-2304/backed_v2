@@ -81,4 +81,8 @@ export class AppDate implements IAppDate {
       second: dateLocal.second(),
     };
   }
+
+  addDiffSecond(second: number): Date {
+    return this.#instance().add(second, "seconds").toDate();
+  }
 }

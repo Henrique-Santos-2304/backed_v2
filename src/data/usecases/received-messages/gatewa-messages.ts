@@ -1,5 +1,4 @@
-import { IDPS, INJECTOR_CASES } from "@root/shared";
-import { catchDataMessage } from "./helpers/get-data-msg";
+import { IDPS, INJECTOR_CASES, splitMsgCloud } from "@root/shared";
 import { Injector } from "@root/main/injector";
 import { IBaseUseCases } from "@root/domain";
 
@@ -12,7 +11,7 @@ export class ReceivedGatewayMessages {
   ];
 
   static async start(message: ArrayBuffer) {
-    const { payload, idp } = catchDataMessage(message);
+    const { msg, idp } = splitMsgCloud(message.toString());
 
     const idpIsValid = ReceivedGatewayMessages.IDP_VARIABLES.includes(idp);
 
@@ -22,6 +21,6 @@ export class ReceivedGatewayMessages {
       INJECTOR_CASES.RADIO_VARIABLES.SAVE
     );
 
-    return await service.execute(payload);
+    return await service.execute(msg);
   }
 }

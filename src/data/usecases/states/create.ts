@@ -38,10 +38,6 @@ export class CreateStateUseCase implements IBaseUseCases {
 
     await checkPivotExist(this.#baseRepo.findOne, state?.pivot_id);
 
-    if (state?.author) {
-      await checkUserExists(this.#baseRepo.findOne, state?.author);
-    }
-
     const lastState = await getLastStateFull(
       this.#baseRepo.findLast,
       state?.pivot_id

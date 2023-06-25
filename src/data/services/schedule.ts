@@ -1,4 +1,4 @@
-import schedule, { RecurrenceRule } from "node-schedule";
+import schedule from "node-schedule";
 import { IAppDate, IAppLog, IScheduler, InitScheduleType } from "@root/domain";
 import { Injector } from "@root/main/injector";
 import { INJECTOR_COMMONS } from "@root/shared";
@@ -16,20 +16,6 @@ export class ScheduleManager implements IScheduler {
       this.#console || Injector.get<IAppLog>(INJECTOR_COMMONS.APP_LOGS);
   }
 
-  private transformRule(date: Date | string): RecurrenceRule {
-    const dateLocal = this.#date.detailsData(date);
-
-    const rule = new schedule.RecurrenceRule();
-    rule.date = dateLocal.date;
-    rule.month = dateLocal.month;
-    rule.year = dateLocal.year;
-    rule.hour = dateLocal.hour;
-    rule.minute = dateLocal.minute;
-    rule.second = dateLocal.second;
-
-    return rule;
-  }
-
   stop(id: string): void {
     try {
       this.initInstances();
@@ -45,9 +31,13 @@ export class ScheduleManager implements IScheduler {
       this.initInstances();
 
       this.#console.log(`Configurando novo agendamento ${id}`);
+      const start = this.#date.addDiffSecond(date);
+      const secondEnd = date + 1;
+      const end = this.#date.addDiffSecond(secondEnd);
+
       schedule.scheduleJob(
         id,
-        this.transformRule(date),
+        { start, end, rule: "* * * * * *" },
         cb.bind(null, dataBind)
       );
     } catch (error) {

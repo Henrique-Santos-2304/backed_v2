@@ -9,7 +9,7 @@ export type ScheduleStub = {
   idp: string;
   attempts: number;
   message: string;
-  cb: (fail: boolean, msg?: string) => void;
+  cb: (fail: boolean, msg?: string[]) => void;
 };
 
 export interface IObservables<Sub = any> {

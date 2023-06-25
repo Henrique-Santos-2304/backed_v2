@@ -1,20 +1,19 @@
-import { IDPS, INJECTOR_CASES } from "@root/shared";
-import { catchDataMessage } from "./helpers/get-data-msg";
+import { IDPS, INJECTOR_CASES, splitMsgCloud } from "@root/shared";
 import { Injector } from "@root/main/injector";
 
 export class NewCloudMessages {
   static async start(message: ArrayBuffer) {
-    const { payload, idp } = catchDataMessage(message);
-    const arrayMessage = payload.split("-");
+    const { toList } = splitMsgCloud(message.toString());
 
-    switch (idp) {
+    switch (toList[0]) {
       case IDPS.GET_INITIAL_DATA:
         Injector.get(INJECTOR_CASES.COMMONS.GET_INITIAL_DATA)?.execute(
-          arrayMessage[1]
+          toList[1]
         );
         break;
       case IDPS.STATUS:
-        Injector.get(INJECTOR_CASES.COMMONS.RECEIVED_STATUS)?.execute(payload);
+        if (toList.length !== 6) throw new Error("Formato Inválido");
+        Injector.get(INJECTOR_CASES.COMMONS.RECEIVED_STATUS)?.execute(toList);
         break;
 
       default:

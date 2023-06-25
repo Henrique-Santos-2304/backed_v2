@@ -53,7 +53,7 @@ export class SaveLastStatePivotUseCase {
 
     await this.putPivot(pivot_id, message);
 
-    if (oldPivot?.is_gprs) {
+    if (!oldPivot?.is_gprs) {
       await this.#iot.publisher(`${oldPivot?.farm_id}_0`, `#${payload}$`);
     }
 

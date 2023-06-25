@@ -2,7 +2,7 @@ import { SchedulingModel } from "@root/infra/models";
 
 export type InitScheduleType = {
   id: string;
-  date: Date | string;
+  date: number;
   dataBind: any;
   cb: (data: any) => void;
 };
@@ -10,16 +10,18 @@ export type InitScheduleType = {
 export type ScheduleJobIniType = {
   job: SchedulingModel;
   is_stop: boolean;
+  end_date_diff?: number | null;
 };
 
 export type ObservableAngleType = {
   pivot_id: string;
   requiredAngle: number;
+  type?: "desc" | "cresc";
   cb: () => void;
 };
 
 export interface IBaseScheduleCase {
-  sendJob({ job, is_stop }: ScheduleJobIniType): void;
+  sendJob({ job, is_stop, end_date_diff }: ScheduleJobIniType): void;
 }
 
 export interface IScheduler {

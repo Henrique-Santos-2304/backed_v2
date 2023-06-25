@@ -12,10 +12,14 @@ import { Injector } from "@root/main/injector";
 export class InitScheduleByDate implements IBaseScheduleCase {
   #scheduler: IScheduler;
 
-  private finishByDate(job: SchedulingModel) {
+  private initInstances() {
+    this.#scheduler = Injector.get(INJECTOR_CASES.COMMONS.SCHEDULE_MANAGER);
+  }
+
+  private finishByDate(job: SchedulingModel, date: number) {
     return this.#scheduler.start({
       id: `${job?.pivot_id}-${job?.scheduling_id}-end`,
-      date: job?.end_timestamp!,
+      date,
       cb: SchedulerSendAction.start,
       dataBind: { job, is_stop: true },
     });
@@ -36,8 +40,9 @@ export class InitScheduleByDate implements IBaseScheduleCase {
     });
   }
 
-  sendJob: IBaseScheduleCase["sendJob"] = async ({ job }) => {
+  sendJob: IBaseScheduleCase["sendJob"] = async ({ job, end_date_diff }) => {
     try {
+      this.initInstances();
       await SchedulerSendAction.start({ job, is_stop: job?.is_stop || false });
 
       if (job?.is_stop) return;
@@ -46,7 +51,7 @@ export class InitScheduleByDate implements IBaseScheduleCase {
         return this.finishByAngle(job);
       }
 
-      return this.finishByDate(job);
+      return this.finishByDate(job, end_date_diff!);
     } catch (error) {
       console.warn("ERROR! .....");
       console.error(error.message);

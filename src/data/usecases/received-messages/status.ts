@@ -22,25 +22,22 @@ export class ReceveidStatus implements IBaseUseCases {
   #saveLastState: IBaseUseCases;
   #createState: IBaseUseCases;
   #createVariable: IBaseUseCases;
-  #actioObserver: IObservables;
+  #actionObserver: IObservables;
+  #angleObserver: IObservables;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#iot = this.#iot ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#iot = Injector.get(INJECTOR_COMMONS.APP_LOGS);
 
-    this.#saveLastState =
-      this.#saveLastState ??
-      Injector.get(INJECTOR_CASES.PIVOTS.SAVE_LAST_STATE);
+    this.#saveLastState = Injector.get(INJECTOR_CASES.PIVOTS.SAVE_LAST_STATE);
 
-    this.#createState =
-      this.#createState ?? Injector.get(INJECTOR_CASES.STATES.CREATE);
+    this.#createState = Injector.get(INJECTOR_CASES.STATES.CREATE);
 
-    this.#createVariable =
-      this.#createVariable ??
-      Injector.get(INJECTOR_CASES.STATE_VARIABLES.CREATE);
+    this.#createVariable = Injector.get(INJECTOR_CASES.STATE_VARIABLES.CREATE);
 
-    this.#actioObserver =
-      this.#actioObserver ?? Injector.get(INJECTOR_OBSERVABLES.ACTION);
+    this.#actionObserver = Injector.get(INJECTOR_OBSERVABLES.ACTION);
+
+    this.#angleObserver = Injector.get(INJECTOR_OBSERVABLES.ANGLE_JOB);
   }
 
   private async saveLasteState(payload: string) {
@@ -74,21 +71,19 @@ export class ReceveidStatus implements IBaseUseCases {
     });
   }
 
-  private splitMessage(payload: string) {
-    const arrayMessage = payload.split("-");
-    if (arrayMessage.length !== 6) throw new Error("Formato Inválido");
-    return arrayMessage;
-  }
-
-  async execute(payload: string) {
+  async execute(payload: string[]) {
     this.initInstances();
 
-    const [_, pivot_id, state, percent, angle, __] = this.splitMessage(payload);
+    console.log(payload);
+
+    const [_, pivot_id, state, percent, angle, __] = payload;
 
     await checkPivotExist(this.#baseRepo.findOne, pivot_id);
-    const author = await this.#actioObserver.dispatch(pivot_id);
 
-    await this.saveLasteState(payload);
+    this.#angleObserver.dispatch(pivot_id, Number(angle));
+    const author = await this.#actionObserver.dispatch(pivot_id);
+
+    await this.saveLasteState(payload.join("-"));
 
     const newState = await this.createState(pivot_id, state, author || null);
 

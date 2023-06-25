@@ -15,4 +15,5 @@ export interface IAppDate {
   handleDateToHistories(date: string, hour: number): Date;
   catchDiff(date: Date | null): number;
   dateIsAter(dateOne?: Date, dateTwo?: Date): boolean;
+  addDiffSecond(second: number): Date;
 }

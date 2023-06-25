@@ -7,6 +7,8 @@ import {
   InitScheduleByAngle,
   CreateSchedulingUseCase,
   UpdateSchedulingUseCase,
+  GetSchedulingsPendingUseCase,
+  DeleteSchedulingUseCase,
 } from "@root/data/usecases";
 
 export const injectSchedulingCases = async () => {
@@ -15,4 +17,10 @@ export const injectSchedulingCases = async () => {
   Injector.add(new InitScheduleByDate(), INJECTOR_CASES.SCHEDULE.INIT_DATE);
   Injector.add(new CreateSchedulingUseCase(), INJECTOR_CASES.SCHEDULE.CREATE);
   Injector.add(new UpdateSchedulingUseCase(), INJECTOR_CASES.SCHEDULE.UPDATE);
+  Injector.add(new DeleteSchedulingUseCase(), INJECTOR_CASES.SCHEDULE.DELETE);
+
+  Injector.add(
+    new GetSchedulingsPendingUseCase(),
+    INJECTOR_CASES.SCHEDULE.GET_ALL
+  );
 };

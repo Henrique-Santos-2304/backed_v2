@@ -1,3 +1,9 @@
+import { Injector } from "@root/main/injector";
+import { checkSchedulingExist } from "./helpers";
+import { SchedulingModel } from "@root/infra/models";
+import { MutationScheduleHistVO } from "@root/infra";
+import { IPutSchedulingHistExecute } from "@root/domain/usecases";
+
 import {
   IAppDate,
   IAppLog,
@@ -8,8 +14,7 @@ import {
   IScheduler,
   ScheduleStub,
 } from "@root/domain";
-import { IPutSchedulingHistExecute } from "@root/domain/usecases";
-import { Injector } from "@root/main/injector";
+
 import {
   DB_TABLES,
   IDPS,
@@ -18,32 +23,26 @@ import {
   INJECTOR_OBSERVABLES,
   INJECTOR_REPOS,
 } from "@root/shared";
-import { checkSchedulingExist } from "./helpers";
-import { SchedulingModel } from "@root/infra/models";
-import { MutationScheduleHistVO } from "@root/infra";
-import { SchedulerSendAction } from "./helpers/send-action";
 
 export class UpdateSchedulingUseCase implements IBaseUseCases {
   #baseRepo: IBaseRepository;
   #console: IAppLog;
   #date: IAppDate;
-  #iot: IIotConnect;
   #managerScheduler: IScheduler;
   #observer: IObservables<ScheduleStub>;
   #createSchedule: IBaseUseCases;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo || Injector.get(INJECTOR_REPOS.BASE);
-    this.#console = this.#console || Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#createSchedule = Injector.get(INJECTOR_CASES.SCHEDULE.CREATE);
 
-    this.#observer =
-      this.#observer || Injector.get(INJECTOR_OBSERVABLES.SCHEDULE);
+    this.#observer = Injector.get(INJECTOR_OBSERVABLES.SCHEDULE);
 
-    this.#date = this.#date || Injector.get(INJECTOR_COMMONS.APP_DATE);
-    this.#iot = this.#iot || Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
-    this.#managerScheduler =
-      this.#managerScheduler ||
-      Injector.get(INJECTOR_CASES.COMMONS.SCHEDULE_MANAGER);
+    this.#date = Injector.get(INJECTOR_COMMONS.APP_DATE);
+    this.#managerScheduler = Injector.get(
+      INJECTOR_CASES.COMMONS.SCHEDULE_MANAGER
+    );
   }
 
   private getIdp(newData: SchedulingModel) {
@@ -82,11 +81,10 @@ export class UpdateSchedulingUseCase implements IBaseUseCases {
   }
 
   private async startLocalSchedule(scheduling: SchedulingModel) {
-    await this.#baseRepo.update({
+    await this.#baseRepo.delete({
       column: DB_TABLES.SCHEDULINGS,
       where: "scheduling_id",
       equals: scheduling?.scheduling_id,
-      data: scheduling,
     });
 
     this.#managerScheduler.stop(
@@ -95,7 +93,10 @@ export class UpdateSchedulingUseCase implements IBaseUseCases {
       }`
     );
 
-    SchedulerSendAction.handleAndInitSchedule(scheduling);
+    return await this.#createSchedule.execute({
+      ...scheduling,
+      type: this.handlerTypeSchedule(scheduling?.type),
+    });
   }
 
   private async startBoardSchedule(scheduling: SchedulingModel) {
@@ -137,8 +138,7 @@ export class UpdateSchedulingUseCase implements IBaseUseCases {
     const entity = this.createEntity(scheduling, schedule);
 
     if (!scheduling?.is_board) {
-      await this.startLocalSchedule(entity);
-      return entity;
+      return await this.startLocalSchedule(entity);
     }
 
     await this.startBoardSchedule(scheduling);

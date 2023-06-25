@@ -50,18 +50,12 @@ export class MutationScheduleHistVO {
     else return "FULL_DATE";
   }
 
-  private isTyping() {
-    const isStop =
-      this.#scheduling.type === "STOP_ANGLE" ||
-      this.#scheduling.type === "STOP_DATE";
+  private isTyping(type: SchedulingModel["type"]) {
+    const isStop = type === "STOP_ANGLE" || type === "STOP_DATE";
 
-    const isEndDate =
-      this.#scheduling.type === "STOP_DATE" ||
-      this.#scheduling.type === "FULL_DATE";
+    const isEndDate = type === "STOP_DATE" || type === "FULL_DATE";
 
-    const isEndAngle =
-      this.#scheduling.type === "FULL_ANGLE" ||
-      this.#scheduling.type === "STOP_ANGLE";
+    const isEndAngle = type === "FULL_ANGLE" || type === "STOP_ANGLE";
 
     return { isStop, isEndAngle, isEndDate };
   }
@@ -71,43 +65,45 @@ export class MutationScheduleHistVO {
     author?: string,
     is_board: boolean = true
   ) {
-    this.#scheduling.scheduling_id = this.#hash.generate();
-    this.#scheduling.pivot_id = payload[1];
-    this.#scheduling.is_board = is_board || false;
-    this.#scheduling.type = this.getType(payload[0]);
-    this.#scheduling.status = "PENDING";
-    this.#scheduling.start_date_of_module =
-      payload[2] && payload[2] !== "manual"
-        ? payload[2]
-        : this.#hash.generate();
+    const type = this.getType(payload[0]);
+    const { isStop, isEndDate, isEndAngle } = this.isTyping(type);
+    this.#scheduling = {
+      scheduling_id: this.#hash.generate(),
+      pivot_id: payload[1],
+      author: author || "",
+      type,
+      status: "PENDING",
+      is_board: is_board || false,
+      is_stop: isStop,
+      is_return: type === "FULL_ANGLE",
 
-    const { isStop, isEndDate, isEndAngle } = this.isTyping();
-    this.#scheduling.power = isStop ? false : payload[5][2] === "1";
-    this.#scheduling.water = isStop ? false : payload[5][1] === "6";
+      power: isStop ? false : payload[5][2] === "1",
+      water: isStop ? false : payload[5][1] === "6",
+      percentimeter: isStop ? 0 : Number(payload[6]) || 0,
+      direction: isStop
+        ? "CLOCKWISE"
+        : payload[5][0] === "3"
+        ? "CLOCKWISE"
+        : "ANTI_CLOCKWISE",
 
-    this.#scheduling.percentimeter = isStop ? 0 : Number(payload[6]) || 0;
-    this.#scheduling.is_return = this.#scheduling.type === "FULL_ANGLE";
-    this.#scheduling.author = author || "";
-    this.#scheduling.end_angle = !isEndAngle ? null : Number(payload[4]);
-    this.#scheduling.timestamp = this.#date.dateNow();
+      start_angle: null,
+      end_angle: !isEndAngle ? null : Number(payload[4]),
 
-    this.#scheduling.direction = isStop
-      ? "CLOCKWISE"
-      : payload[5][0] === "3"
-      ? "CLOCKWISE"
-      : "ANTI_CLOCKWISE";
+      timestamp: this.#date.dateNow(),
+      start_timestamp: isStop
+        ? null
+        : this.#date.addDiffSecond(Number(payload[3])),
+      end_timestamp: !isEndDate
+        ? null
+        : this.#date.addDiffSecond(
+            Number(type === "FULL_DATE" ? payload[4] : payload[3])
+          ),
 
-    this.#scheduling.end_timestamp = !isEndDate
-      ? null
-      : !is_board
-      ? this.#date.toDateSP(payload[3])
-      : this.#date.dateNow();
-
-    this.#scheduling.start_timestamp = isStop
-      ? null
-      : !is_board
-      ? this.#date.toDateSP(payload[4])
-      : this.#date.dateNow();
+      start_date_of_module:
+        payload[2] && payload[2] !== "manual"
+          ? payload[2]
+          : this.#hash.generate(),
+    };
   }
 
   private mountUpdate(
@@ -115,45 +111,46 @@ export class MutationScheduleHistVO {
     newSchedule: SchedulingModel,
     author: string
   ) {
-    this.#scheduling.start_date_of_module =
-      newSchedule?.start_date_of_module || this.#hash.generate();
-    this.#scheduling.scheduling_id =
-      newSchedule?.scheduling_id || this.#hash.generate();
+    const hash = this.#hash.generate();
+    const type = this.getType(idp);
+    const { isStop, isEndDate, isEndAngle } = this.isTyping(type);
 
-    const { isStop, isEndDate, isEndAngle } = this.isTyping();
+    this.#scheduling = {
+      scheduling_id: newSchedule?.scheduling_id || hash,
+      start_date_of_module: newSchedule?.start_date_of_module || hash,
 
-    this.#scheduling.is_board = newSchedule?.is_board || false;
-    this.#scheduling.type = this.getType(idp);
+      pivot_id: newSchedule?.pivot_id,
+      author: author,
+      updated: newSchedule?.updated || author,
 
-    this.#scheduling.power = isStop ? false : newSchedule?.power || false;
-    this.#scheduling.water = isStop ? false : newSchedule?.water || false;
+      type,
+      status: "PENDING",
+      is_board: newSchedule?.is_board || false,
+      is_return: type === "FULL_ANGLE",
+      is_stop: isStop,
 
-    this.#scheduling.is_return = this.#scheduling.type === "FULL_ANGLE";
-    this.#scheduling.author = author;
-    this.#scheduling.end_angle = !isEndAngle ? null : newSchedule?.end_angle;
-    this.#scheduling.updated = newSchedule?.author;
+      power: isStop ? false : newSchedule?.power || false,
+      water: isStop ? false : newSchedule?.water || false,
+      direction: isStop ? "CLOCKWISE" : newSchedule?.direction || "CLOCKWISE",
+      percentimeter: isStop ? 0 : newSchedule?.percentimeter || 0,
 
-    this.#scheduling.end_timestamp = !isEndDate
-      ? null
-      : !this.#scheduling.is_board
-      ? this.#date.toDateSP(newSchedule?.end_timestamp!)
-      : this.#date.dateNow();
+      start_angle: null,
+      end_angle: !isEndAngle ? null : newSchedule?.end_angle,
 
-    this.#scheduling.start_timestamp = isStop
-      ? null
-      : !this.#scheduling.is_board
-      ? this.#date.toDateSP(newSchedule?.start_timestamp!)
-      : this.#date.dateNow();
+      end_timestamp: !isEndDate
+        ? null
+        : !newSchedule?.is_board
+        ? this.#date.toDateSP(newSchedule?.end_timestamp!)
+        : this.#date.dateNow(),
 
-    this.#scheduling.timestamp = this.#date.dateNow();
+      start_timestamp: isStop
+        ? null
+        : !newSchedule?.is_board
+        ? this.#date.toDateSP(newSchedule?.start_timestamp!)
+        : this.#date.dateNow(),
 
-    this.#scheduling.direction = isStop
-      ? "CLOCKWISE"
-      : newSchedule?.direction || "CLOCKWISE";
-
-    this.#scheduling.percentimeter = isStop
-      ? 0
-      : newSchedule?.percentimeter || 0;
+      timestamp: this.#date.dateNow(),
+    };
   }
 
   create(payload: string[], author?: string, is_board?: boolean) {

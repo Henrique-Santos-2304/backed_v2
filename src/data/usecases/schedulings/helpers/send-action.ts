@@ -45,7 +45,7 @@ export class SchedulerSendAction {
     };
   }
 
-  static handleAndInitSchedule(job: SchedulingModel) {
+  static handleAndInitSchedule(job: SchedulingModel, message: string[]) {
     const { initByAngle, initByDate, managerSchedule } =
       SchedulerSendAction.getDepencies();
 
@@ -56,16 +56,23 @@ export class SchedulerSendAction {
     }`;
 
     const date = job?.is_stop
-      ? job?.end_timestamp!
+      ? message[3]!
       : job?.type === "STOP_ANGLE"
       ? new Date(Date.now() + 2000)
-      : job?.start_timestamp!;
+      : message[4]!;
 
     managerSchedule.start({
       id,
-      date,
+      date: Number(date),
       cb: job?.type === "STOP_ANGLE" ? initByAngle.sendJob : initByDate.sendJob,
-      dataBind: job?.type === "STOP_ANGLE" ? { job, is_stop: true } : { job },
+      dataBind:
+        job?.type === "STOP_ANGLE"
+          ? { job, is_stop: true }
+          : {
+              job,
+              end_date_diff:
+                job?.type === "FULL_DATE" ? Number(message[4]) : null,
+            },
     });
   }
 
@@ -81,12 +88,14 @@ export class SchedulerSendAction {
       );
 
       await createAction.execute({
-        pivot_id: job.pivot_id,
-        author: job.author,
-        power: job.is_stop ? false : job?.power || false,
-        water: job.is_stop ? false : job?.water || false,
-        direction: job.is_stop ? "CLOCKWISE" : job?.direction || "CLOCKWISE",
-        percentimeter: job.is_stop ? 0 : job?.percentimeter || 0,
+        action: {
+          pivot_id: job.pivot_id,
+          author: job.author,
+          power: job.is_stop ? false : job?.power || false,
+          water: job.is_stop ? false : job?.water || false,
+          direction: job.is_stop ? "CLOCKWISE" : job?.direction || "CLOCKWISE",
+          percentimeter: job.is_stop ? 0 : job?.percentimeter || 0,
+        },
       });
 
       await baseRepo.update<Partial<SchedulingModel>>({
@@ -97,7 +106,7 @@ export class SchedulerSendAction {
       });
 
       const scheduler = Injector.get<IScheduler>(
-        INJECTOR_COMMONS.APP_ENCRYPTER
+        INJECTOR_CASES.COMMONS.SCHEDULE_MANAGER
       );
 
       scheduler.stop(

@@ -1,3 +1,6 @@
+import { mountMessageSchedule } from "./helpers/mount-message-iot";
+import { RequestScheduleCreate } from "@root/domain/usecases";
+import { checkPivotExist } from "../pivots/helpers";
 import {
   IAppDate,
   IAppLog,
@@ -14,9 +17,6 @@ import {
   INJECTOR_OBSERVABLES,
   INJECTOR_REPOS,
 } from "@root/shared";
-import { mountMessageSchedule } from "./helpers/mount-message-iot";
-import { RequestScheduleCreate } from "@root/domain/usecases";
-import { checkPivotExist } from "../pivots/helpers";
 
 class CreateSchedulingUseCase implements IBaseUseCases {
   #date: IAppDate;
@@ -46,7 +46,7 @@ class CreateSchedulingUseCase implements IBaseUseCases {
     message: string,
     scheduling: RequestScheduleCreate,
     fail: boolean,
-    board_msg?: string
+    board_msg?: string[]
   ) {
     this.#console.warn(
       fail
@@ -56,14 +56,14 @@ class CreateSchedulingUseCase implements IBaseUseCases {
 
     const listMyMsg = message.split("#")[1].split("$")[0].split("-");
 
-    const board_id = !board_msg ? "manual" : board_msg.split("-")[2];
+    const board_id = !board_msg ? "manual" : board_msg[2];
 
     const payload = [
       listMyMsg[0],
       scheduling?.pivot_id,
       board_id,
       ...listMyMsg.splice(1),
-    ].join("-");
+    ];
 
     await this.#saveSchedule.execute({
       schedule: payload,
@@ -80,7 +80,7 @@ class CreateSchedulingUseCase implements IBaseUseCases {
       idp,
       message: msg,
       attempts: 1,
-      cb: (fail: boolean, message?: string) =>
+      cb: (fail: boolean, message?: string[]) =>
         this.cbListener(msg, scheduling, fail, message),
     });
   }

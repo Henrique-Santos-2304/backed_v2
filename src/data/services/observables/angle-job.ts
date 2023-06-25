@@ -1,21 +1,30 @@
 import {
   AngleSubscribe,
+  IBaseRepository,
   IObservables,
   ObservableAngleType,
 } from "@root/domain";
+import { PivotModel } from "@root/infra/models";
+import { Injector } from "@root/main/injector";
+import { DB_TABLES, INJECTOR_REPOS } from "@root/shared";
 
 export class AngleJobObservable implements IObservables {
   #schedules: ObservableAngleType[] = [];
 
   private check(pivot_id: string, angle: number) {
-    return this.#schedules.find(
-      (p) => p.pivot_id === pivot_id && angle === p.requiredAngle
-    );
+    return this.#schedules.find((p) => {
+      const pivotEquals = p.pivot_id === pivot_id;
+      const angleValid =
+        p.type === "cresc"
+          ? angle >= p.requiredAngle
+          : angle <= p.requiredAngle;
+
+      return pivotEquals && angleValid;
+    });
   }
 
   async dispatch(pivot_id: string, angle: number) {
     const action = this.check(pivot_id, angle);
-
     if (!action) return;
 
     this.unsubscribe(pivot_id, action?.requiredAngle);
@@ -28,11 +37,26 @@ export class AngleJobObservable implements IObservables {
     );
   }
 
-  subscribe: IObservables<AngleSubscribe>["subscribe"] = ({
+  subscribe: IObservables<AngleSubscribe>["subscribe"] = async ({
     pivot_id,
     requiredAngle,
     cb,
   }) => {
-    this.#schedules = [...this.#schedules, { pivot_id, requiredAngle, cb }];
+    const baseRepo = Injector.get<IBaseRepository>(INJECTOR_REPOS.BASE);
+    const piv = await baseRepo.findOne<PivotModel>({
+      column: DB_TABLES.PIVOTS,
+      where: "pivot_id",
+      equals: pivot_id,
+    });
+
+    this.#schedules = [
+      ...this.#schedules.filter((sc) => sc.pivot_id === pivot_id),
+      {
+        pivot_id,
+        requiredAngle,
+        type: piv?.last_angle > requiredAngle ? "desc" : "cresc",
+        cb,
+      },
+    ];
   };
 }

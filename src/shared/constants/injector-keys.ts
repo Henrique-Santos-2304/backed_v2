@@ -3,6 +3,7 @@ export const INJECTOR_REPOS = {
   PIVOT: "repo_pivot",
   STATE: "repo_state",
   STATE_VARIABLES: "repo_state_variables",
+  SCHEDULINGS: "repo_schedulings",
 };
 
 export const INJECTOR_COMMONS = {
@@ -130,7 +131,10 @@ export const INJECTOR_CONTROLS = {
 
   SCHEDULE: {
     CREATE: "controls_create_schedule",
+    GET_ALL_BY_DATE: "controls_get_all_by_date_schedule",
+    GET_ALL_BY_ANGLE: "controls_get_all_by_angle_schedule",
     GET_ALL: "controls_get_all_schedule",
+
     UPDATE: "controls_update_schedule",
     DELETE: "controls_delete_schedule",
   },

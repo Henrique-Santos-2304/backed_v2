@@ -25,13 +25,13 @@ export class SaveSchedulingHistory implements IBaseUseCases {
     });
 
     if (!user) this.#console.warn("Author do agendamento não encontrado");
-    return user?.login || "";
+    return user?.login || author || "";
   }
 
-  private createEntity(msg: string, is_board: boolean, author?: string) {
+  private createEntity(msg: string[], is_board: boolean, author?: string) {
     const vo = new MutationScheduleHistVO();
 
-    return vo.create(msg.split("-"), author, is_board).find();
+    return vo.create(msg, author, is_board).find();
   }
 
   execute: ICreateSchedulingHistExecute = async ({
@@ -52,10 +52,13 @@ export class SaveSchedulingHistory implements IBaseUseCases {
       data: entity,
     });
 
-    if (!scheduling) throw new Error("Erro ao criar agendamento");
+    if (!scheduling) {
+      this.#console.warn("Erro ao criar agendamento");
+      return;
+    }
 
     if (!is_board) {
-      SchedulerSendAction.handleAndInitSchedule(scheduling);
+      SchedulerSendAction.handleAndInitSchedule(scheduling, schedule);
     }
 
     return scheduling;

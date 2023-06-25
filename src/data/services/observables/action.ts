@@ -1,4 +1,4 @@
-import { IAppLog, IIotConnect, IObservables } from "@root/domain";
+import { IAppLog, IObservables } from "@root/domain";
 import { ActionProps } from "@root/domain/usecases";
 import { Injector } from "@root/main/injector";
 import { IDPS, INJECTOR_COMMONS } from "@root/shared";
@@ -9,6 +9,12 @@ type Props = {
   idp: string;
   attempts: number;
   author: string;
+};
+
+type SubProps = {
+  action: ActionProps;
+  topic: string;
+  message: string;
 };
 
 export class CreateActionObservable implements IObservables {
@@ -31,18 +37,17 @@ export class CreateActionObservable implements IObservables {
   private async checkMessageReceived(
     action: Props,
     topic: string,
-    message: string,
-    publisher: IIotConnect["publisher"]
+    message: string
   ) {
     setTimeout(async () => {
       const console = Injector.get<IAppLog>(INJECTOR_COMMONS.APP_LOGS);
-
       const exists = this.checkByPivot(action?.pivot_id);
+
       if (!exists) return;
 
       if (action?.attempts > 3) {
         console.error(
-          `ACK de ação não recebido para o pivô ${action?.pivot_id}`
+          `ACK de ação não recebido para o pivô ${exists?.pivot_id}`
         );
         return;
       }
@@ -54,30 +59,24 @@ export class CreateActionObservable implements IObservables {
       await this.checkMessageReceived(
         { ...action, attempts: action.attempts + 1 },
         topic,
-        message,
-        publisher
+        message
       );
     }, 5000);
   }
 
-  subscribe(
-    newAction: ActionProps,
-    topic: string,
-    message: string,
-    publisher: IIotConnect["publisher"]
-  ) {
-    const exists = this.checkByPivot(newAction?.pivot_id);
+  subscribe({ action, topic, message }: SubProps) {
+    const exists = this.checkByPivot(action?.pivot_id);
 
-    if (exists) this.exclude(newAction?.pivot_id);
+    if (exists) this.exclude(action?.pivot_id);
 
-    const action = {
-      pivot_id: newAction?.pivot_id,
-      author: newAction?.author,
+    const newAction = {
+      pivot_id: action?.pivot_id,
+      author: action?.author,
       idp: IDPS.COMANDS,
       attempts: 1,
     };
 
-    this.#action.push(action);
-    this.checkMessageReceived(action, topic, message, publisher);
+    this.#action.push(newAction);
+    this.checkMessageReceived(newAction, topic, message);
   }
 }

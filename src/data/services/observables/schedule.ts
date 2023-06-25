@@ -5,10 +5,8 @@ import { INJECTOR_COMMONS } from "@root/shared";
 export class CreateScheduleObservable implements IObservables {
   #scheduleSub: ScheduleStub[] = [];
 
-  async dispatch(message: string) {
-    console.log(this.#scheduleSub);
-    const [idp, pivot_id, id_board] = message.split("-");
-    // Remover agendamento do banco de dados
+  async dispatch(message: string[]) {
+    const [idp, pivot_id, id_board] = message;
     const listener = this.check(pivot_id, idp);
 
     if (!listener) return;
@@ -29,8 +27,6 @@ export class CreateScheduleObservable implements IObservables {
       stub?.pivot_id,
       stub?.message
     );
-
-    console.log(stub?.message);
 
     setTimeout(() => {
       this.checkListener(stub);

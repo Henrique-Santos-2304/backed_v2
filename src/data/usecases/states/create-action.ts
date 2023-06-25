@@ -41,7 +41,6 @@ export class CreateActionUseCase implements IBaseUseCases {
 
   execute: ICreateActionExecute = async ({ action, isGateway }) => {
     this.initInstances();
-    console.log(action);
     const piv = await checkPivotExist(this.#baseRepo.findOne, action?.pivot_id);
 
     const topic = piv?.is_gprs ? piv?.pivot_id : `${piv?.farm_id}_0`;
@@ -50,6 +49,6 @@ export class CreateActionUseCase implements IBaseUseCases {
     )}-${action?.author || "Manual"}$`;
     await this.#iot.publisher(topic, message);
 
-    this.#actionObserver.subscribe(action, topic, message, this.#iot.publisher);
+    this.#actionObserver.subscribe({ action, topic, message });
   };
 }

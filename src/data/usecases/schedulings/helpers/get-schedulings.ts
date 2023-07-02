@@ -1,17 +1,17 @@
 import { IBaseRepository } from "@root/domain";
 import { SchedulingModel } from "@root/infra/models";
-import { DB_TABLES } from "@root/shared";
+import { Injector } from "@root/main/injector";
+import { DB_TABLES, INJECTOR_REPOS } from "@root/shared";
 
 export const checkSchedulingExist = async (
-  repo: IBaseRepository["findOne"],
   scheduling_id: SchedulingModel["scheduling_id"],
   exist: boolean = true
 ): Promise<SchedulingModel> => {
-  const scheduling = await repo<SchedulingModel>({
-    column: DB_TABLES.SCHEDULINGS,
-    where: "scheduling_id",
-    equals: scheduling_id,
-  });
+  const baseRepo = Injector.get<IBaseRepository>(INJECTOR_REPOS.BASE);
+  const scheduling = await baseRepo.findOne<SchedulingModel>(
+    DB_TABLES.SCHEDULINGS,
+    { scheduling_id }
+  );
 
   if (exist && !scheduling) throw new Error("Agendamento não encontrado");
   if (!exist && scheduling) throw new Error("Agendamento encontrado");

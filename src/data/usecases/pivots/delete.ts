@@ -10,9 +10,9 @@ export class DeletePivotUseCase {
   #iot: IIotConnect;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
-    this.#iot = this.#iot ?? Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#iot = Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
   }
 
   execute: IDelPivotExecute = async ({ pivot_id, isGateway }) => {
@@ -20,13 +20,9 @@ export class DeletePivotUseCase {
 
     this.#console.log(`Deletando pivô ${pivot_id}`);
 
-    const { farm_id } = await checkPivotExist(this.#baseRepo.findOne, pivot_id);
+    const { farm_id } = await checkPivotExist(pivot_id);
 
-    await this.#baseRepo.delete({
-      column: DB_TABLES.PIVOTS,
-      where: "pivot_id",
-      equals: pivot_id,
-    });
+    await this.#baseRepo.delete(DB_TABLES.PIVOTS, { pivot_id });
 
     if (!isGateway) return;
 

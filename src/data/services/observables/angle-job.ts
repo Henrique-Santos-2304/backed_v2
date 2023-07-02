@@ -43,10 +43,8 @@ export class AngleJobObservable implements IObservables {
     cb,
   }) => {
     const baseRepo = Injector.get<IBaseRepository>(INJECTOR_REPOS.BASE);
-    const piv = await baseRepo.findOne<PivotModel>({
-      column: DB_TABLES.PIVOTS,
-      where: "pivot_id",
-      equals: pivot_id,
+    const piv = await baseRepo.findOne<PivotModel>(DB_TABLES.PIVOTS, {
+      pivot_id,
     });
 
     this.#schedules = [

@@ -10,23 +10,18 @@ export class DeleteFarmUseCase {
   #iotConnect: IIotConnect;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
-    this.#iotConnect =
-      this.#iotConnect ?? Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#iotConnect = Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
   }
 
   execute: IDelFarmExecute = async (farm_id) => {
     this.initInstances();
 
     this.#console.warn(`Deletando fazenda ${farm_id}`);
-    await checkFarmExist(this.#baseRepo.findOne, farm_id);
+    await checkFarmExist(farm_id);
 
-    await this.#baseRepo.delete({
-      column: DB_TABLES.FARMS,
-      where: "farm_id",
-      equals: farm_id,
-    });
+    await this.#baseRepo.delete(DB_TABLES.FARMS, { farm_id });
 
     await this.#iotConnect.publisher(`${farm_id}_0`, `2001:D-${farm_id}`);
 

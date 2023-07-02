@@ -19,27 +19,18 @@ import {
 } from "@root/shared";
 
 class CreateSchedulingUseCase implements IBaseUseCases {
-  #date: IAppDate;
   #iot: IIotConnect;
   #observer: IObservables<ScheduleStub>;
   #console: IAppLog;
   #saveSchedule: IBaseUseCases;
-  #baseRepo: IBaseRepository;
 
   private initInstances() {
-    this.#date =
-      this.#date || Injector.get<IAppDate>(INJECTOR_COMMONS.APP_DATE);
+    this.#iot = Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
+    this.#observer = Injector.get(INJECTOR_OBSERVABLES.SCHEDULE);
 
-    this.#iot = this.#iot || Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
-    this.#observer =
-      this.#observer || Injector.get(INJECTOR_OBSERVABLES.SCHEDULE);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
 
-    this.#console = this.#console || Injector.get(INJECTOR_COMMONS.APP_LOGS);
-
-    this.#saveSchedule =
-      this.#saveSchedule || Injector.get(INJECTOR_CASES.SCHEDULE.SAVE);
-
-    this.#baseRepo = this.#baseRepo || Injector.get(INJECTOR_REPOS.BASE);
+    this.#saveSchedule = Injector.get(INJECTOR_CASES.SCHEDULE.SAVE);
   }
 
   private async cbListener(
@@ -88,10 +79,7 @@ class CreateSchedulingUseCase implements IBaseUseCases {
   async execute(scheduling: RequestScheduleCreate) {
     this.initInstances();
 
-    const piv = await checkPivotExist(
-      this.#baseRepo.findOne,
-      scheduling?.pivot_id
-    );
+    const piv = await checkPivotExist(scheduling?.pivot_id);
 
     if (!piv?.is_gprs) {
       return await this.#iot.publisher(

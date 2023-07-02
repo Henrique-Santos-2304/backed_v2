@@ -1,147 +1,130 @@
-import knex from "@core/db";
-
-import {
-  IQueryCreateBase,
-  IQueryDeleteBase,
-  IQueryDeleteALLBase,
-  IQueryFindBase,
-  IQueryFindAllBase,
-  IQueryUpdateBase,
-  DbTables,
-  QueryWhereCondition,
-} from "@contracts/repos";
+import { DbTables } from "@contracts/repos";
 import { IBaseRepository } from "@contracts/bases";
 import { repositoryAdapter } from "@main/adapters";
-import { RepositoryAdapterParams } from "@contracts/main";
+import { prisma } from "@root/core";
+import { DB_TABLES } from "@root/shared";
+
+type ObjectDinamic<T = any> = { [key: string]: T };
+type Options = {
+  findFirst: (query: any) => Promise<any>;
+  findMany: (query?: any) => Promise<any>;
+  update: (query: any) => Promise<any>;
+  delete: (query: any) => Promise<any>;
+  deleteMany: (query?: any) => Promise<any>;
+  create: (params: any) => Promise<any>;
+};
 
 export class BaseRepository implements IBaseRepository {
-  async create<P, R = any>({ column, data }: IQueryCreateBase<P>): Promise<R> {
-    const callback: RepositoryAdapterParams<R>["callback"] = async () => {
-      const res = await knex(column).insert(data).select("*").returning("*");
-      return res[0];
-    };
-    return (await repositoryAdapter({
-      columnName: column,
-      callback,
-    })) as Promise<R>;
+  #prisma: ObjectDinamic<Options> = {};
+
+  constructor() {
+    (this.#prisma[DB_TABLES.USERS] = prisma.user),
+      (this.#prisma[DB_TABLES.FARMS] = prisma.farm),
+      (this.#prisma[DB_TABLES.PIVOTS] = prisma.pivot),
+      (this.#prisma[DB_TABLES.STATES] = prisma.state),
+      (this.#prisma[DB_TABLES.STATE_VARIABLES] = prisma.stateVariable),
+      (this.#prisma[DB_TABLES.RADIO_VARIABLES] = prisma.radioVariable),
+      (this.#prisma[DB_TABLES.SCHEDULINGS] = prisma.scheduling);
   }
 
-  async delete({ column, where, equals }: IQueryDeleteBase): Promise<void> {
-    const callback: RepositoryAdapterParams["callback"] = async () => {
-      await knex(column).where(where, equals).delete();
-    };
+  async create<P = any>(model: DbTables, data: P): Promise<P> {
+    const callback = async () =>
+      await this.#prisma[model]?.create({
+        data,
+      });
 
-    (await repositoryAdapter({
-      columnName: column,
+    return (await repositoryAdapter({
+      columnName: model,
+      callback,
+    })) as Promise<P>;
+  }
+
+  async delete<P = any>(model: DbTables, where: Partial<P>): Promise<void> {
+    const callback = async () =>
+      await this.#prisma[model]?.delete({
+        where,
+      });
+
+    return (await repositoryAdapter({
+      columnName: model,
       callback,
     })) as Promise<void>;
   }
 
-  async deleteByDate({
-    column,
-    where,
-    equals,
-    start,
-    end,
-  }: IQueryDeleteBase & { start: Date; end: Date }): Promise<void> {
-    const callback: RepositoryAdapterParams["callback"] = async () => {
-      await knex(column)
-        .where(where, equals)
-        .where("timestamp", ">", "start")
-        .where("timestamp", "<=", "end")
-        .delete();
-    };
+  async deleteAll<P = any>(model: DbTables, where?: Partial<P>): Promise<void> {
+    const callback = async () => await this.#prisma[model]?.deleteMany(where);
 
-    (await repositoryAdapter({
-      columnName: column,
+    return (await repositoryAdapter({
+      columnName: model,
       callback,
     })) as Promise<void>;
   }
 
-  async deleteAll({ column }: IQueryDeleteALLBase): Promise<void> {
-    const callback: RepositoryAdapterParams["callback"] = async () => {
-      await knex(column).delete();
+  async findOne<P = any>(model: DbTables, where: Partial<P>): Promise<P> {
+    const callback = async () => {
+      const res = await this.#prisma[model]?.findFirst({
+        where,
+      });
+
+      return res;
     };
-    (await repositoryAdapter({
-      columnName: column,
+
+    return (await repositoryAdapter({
+      columnName: model,
       callback,
-    })) as Promise<void>;
+    })) as Promise<P>;
   }
 
-  async findOne<R = any>({
-    column,
-    where,
-    equals,
-  }: IQueryFindBase): Promise<R> {
-    const callback: RepositoryAdapterParams<R>["callback"] = async () => {
-      return await knex(column).where(where, equals).select("*").first();
+  async findLast<P = any>(model: DbTables, where: Partial<P>): Promise<P> {
+    const callback = async () => {
+      const response = await this.#prisma[model]?.findMany({
+        where,
+        orderBy: {
+          timestamp: "desc",
+        },
+        take: 1,
+      });
+      return response[0];
     };
+
     return (await repositoryAdapter({
-      columnName: column,
+      columnName: model,
       callback,
-    })) as Promise<R>;
+    })) as Promise<P>;
   }
 
-  async findLast<R = any>({
-    column,
-    where,
-    equals,
-  }: IQueryFindBase): Promise<R> {
-    const callback: RepositoryAdapterParams<R>["callback"] = async () => {
-      return await knex(column)
-        .where(where, equals)
-        .select("*")
-        .orderBy("timestamp", "desc")
-        .first();
-    };
+  async findAll<P = any>(model: DbTables): Promise<P[]> {
+    const callback = async () => await this.#prisma[model]?.findMany();
+
     return (await repositoryAdapter({
-      columnName: column,
+      columnName: model,
       callback,
-    })) as Promise<R>;
+    })) as Promise<P[]>;
   }
 
-  async findAll<R = any>({ column }: IQueryFindAllBase): Promise<R[]> {
-    const callback: RepositoryAdapterParams<R[]>["callback"] = async () => {
-      return await knex(column).select("*");
-    };
+  async findAllByData<P = any>(
+    model: DbTables,
+    where: Partial<P>
+  ): Promise<P[]> {
+    const callback = async () => await this.#prisma[model]?.findMany({ where });
+
     return (await repositoryAdapter({
-      columnName: column,
+      columnName: model,
       callback,
-    })) as Promise<R[]>;
+    })) as Promise<P[]>;
   }
 
-  async findAllByData<R = any>({
-    column,
-    where,
-    equals,
-  }: IQueryFindBase): Promise<R[]> {
-    const callback: RepositoryAdapterParams<R[]>["callback"] = async () => {
-      return await knex(column).where(where, equals).select("*");
-    };
-    return (await repositoryAdapter({
-      columnName: column,
-      callback,
-    })) as Promise<R[]>;
-  }
+  async update<P = any>(
+    model: DbTables,
+    where: Partial<P>,
+    data: Partial<P>
+  ): Promise<P> {
+    const callback = async () =>
+      await this.#prisma[model]?.update({ where, data });
 
-  async update<P, R = any>({
-    column,
-    where,
-    equals,
-    data,
-  }: IQueryUpdateBase<P>): Promise<R> {
-    const callback: RepositoryAdapterParams<R[]>["callback"] = async () => {
-      const res = await knex(column)
-        .where(where, equals)
-        .update(data)
-        .select("*")
-        .returning("*");
-
-      return res[0];
-    };
     return (await repositoryAdapter({
-      columnName: column,
+      columnName: model,
       callback,
-    })) as Promise<R>;
+    })) as Promise<P>;
   }
 }

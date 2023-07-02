@@ -1,0 +1,178 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+
+model Farm {
+  farm_id   String   @id @unique(map: "farms_farm_id_unique") @db.VarChar(255)
+  farm_name String   @db.VarChar(255)
+  farm_city String   @db.VarChar(255)
+  farm_lng  Float    @db.Real
+  farm_lat  Float    @db.Real
+  user_id   String   @db.Uuid
+  users   String[]
+  dealer    String?  @db.VarChar(255)
+
+
+  owner     User    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "farms_user_id_foreign")
+  pivots    Pivot[]
+
+  @@index([user_id], map: "farms_user_id_index")
+  @@map("farms")
+}
+
+model knex_schema_history {
+  id             Int       @id @default(autoincrement())
+  name           String?   @db.VarChar(255)
+  batch          Int?
+  migration_time DateTime? @db.Timestamptz(6)
+}
+
+model knex_schema_history_lock {
+  index     Int  @id @default(autoincrement())
+  is_locked Int?
+}
+
+
+
+
+model Pivot {
+  pivot_id            String                @id @unique(map: "pivots_pivot_id_unique") @db.VarChar(255)
+  pivot_num           Int
+  pivot_lng           Float                 @db.Real
+  pivot_lat           Float                 @db.Real
+  pivot_start_angle   Float                 @db.Real
+  pivot_end_angle     Float                 @db.Real
+  pivot_radius        Float                 @db.Real
+  radio_id            Int
+  farm_id             String                @db.VarChar(255)
+  is_gprs             Boolean               @default(true)
+  ip_gateway          String?
+  last_state    String
+  last_angle   Float    @default(0)
+  last_timestamp DateTime
+
+
+  farms               Farm                 @relation(fields: [farm_id], references: [farm_id], onDelete: Cascade, map: "pivots_farm_id_foreign")
+  radio_variables     RadioVariable[]
+  schedulings         Scheduling[]
+  states              State[]
+
+  @@index([farm_id], map: "pivots_farm_id_index")
+  @@map("pivots")
+}
+
+model RadioVariable {
+  radio_variable_id String   @id @db.Uuid
+  pivot_id          String   @db.VarChar(255)
+
+  father            String?  @db.VarChar(255)  
+  noise             Float?   @db.Real
+  rssi              Float?   @db.Real
+
+  timestamp         DateTime @db.Timestamptz(6)
+  pivot            Pivot   @relation(fields: [pivot_id], references: [pivot_id], onDelete: Cascade, map: "radio_variables_pivot_id_foreign")
+
+  @@index([pivot_id], map: "radio_variables_pivot_id_index")
+  @@map("radio_variables")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+enum SchedulingType {
+  STOP_DATE
+   STOP_ANGLE
+   FULL_DATE
+   FULL_ANGLE
+}
+
+enum SchedulingStatus {
+  PENDING
+  RUNNING
+  FINISHED
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model Scheduling {
+  scheduling_id   String    @id @db.Uuid
+  pivot_id        String    @db.VarChar(255)
+  author          String    @db.VarChar(255)
+  start_date_of_module String 
+
+
+  type SchedulingType
+  status SchedulingStatus
+  updated String?
+
+
+  is_stop         Boolean?   @default(false)
+  is_board        Boolean @default(true)
+  is_return       Boolean?  @default(false)
+
+  power           Boolean?    @default(false)
+  water           Boolean?   @default(false)
+  direction       String?
+  percentimeter   Int?
+
+  start_angle     Int?
+  end_angle       Int?
+
+  start_timestamp DateTime? @db.Timestamptz(6)
+  end_timestamp   DateTime? @db.Timestamptz(6)
+  timestamp       DateTime  @db.Timestamptz(6)
+
+  pivot          Pivot    @relation(fields: [pivot_id], references: [pivot_id], onDelete: Cascade, map: "schedulings_pivot_id_foreign")
+
+  @@index([pivot_id], map: "schedulings_pivot_id_index")
+  @@map("schedulings")
+}
+
+model StateVariable {
+  state_variable_id String   @id @db.Uuid
+  angle             Float?   @db.Real
+  percentimeter     Float?   @db.Real
+  timestamp         DateTime @db.Timestamptz(6)
+  state_id          String   @db.Uuid
+  state            State   @relation(fields: [state_id], references: [state_id], onDelete: Cascade, map: "state_variables_state_id_foreign")
+
+  @@index([state_id], map: "state_variables_state_id_index")
+  @@map("state_variables")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model State {
+  state_id             String            @id @db.Uuid
+  connection           Boolean @default(true)
+  power               Boolean @default(false)
+  water               Boolean @default(false)
+  direction            String
+  timestamp            DateTime          @db.Timestamptz(6)
+  pressure             Boolean?
+  pivot_id             String            @db.VarChar(255)
+  start_angle          Int?
+  author               String?           @db.VarChar(255)
+  variables      StateVariable[]
+  pivots               Pivot            @relation(fields: [pivot_id], references: [pivot_id], onDelete: Cascade, map: "states_pivot_id_foreign")
+
+  @@index([pivot_id], map: "states_pivot_id_index")
+  @@map("states")
+}
+
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model User {
+  user_id   String    @id @db.Uuid
+  login     String    @unique(map: "users_login_unique") @db.VarChar(255)
+  password  String    @db.VarChar(255)
+  user_type String?   @default("USER")
+  secret    String?   @db.VarChar(255)
+  farms     Farm[]
+
+  @@map("users")
+}

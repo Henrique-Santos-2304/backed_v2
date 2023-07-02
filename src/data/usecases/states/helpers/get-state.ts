@@ -1,14 +1,9 @@
 import { IBaseRepository } from "@root/domain";
 import { StateModel } from "@root/infra/models";
-import { DB_TABLES } from "@root/shared";
+import { Injector } from "@root/main/injector";
+import { DB_TABLES, INJECTOR_REPOS } from "@root/shared";
 
-export const getLastStateFull = async (
-  repo: IBaseRepository["findLast"],
-  pivot_id: string
-) => {
-  return await repo<StateModel>({
-    column: DB_TABLES.STATES,
-    where: "pivot_id",
-    equals: pivot_id,
-  });
+export const getLastStateFull = async (pivot_id: string) => {
+  const baseRepo = Injector.get<IBaseRepository>(INJECTOR_REPOS.BASE);
+  return await baseRepo.findLast<StateModel>(DB_TABLES.STATES, { pivot_id });
 };

@@ -8,17 +8,16 @@ export class GetAllFarmsByDealerUseCase implements IBaseUseCases {
   #baseRepo: IBaseRepository;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
   }
 
-  execute: IGetByDealerFarmExecute = async (dealer_id) => {
+  execute: IGetByDealerFarmExecute = async (dealer) => {
     this.initInstances();
 
-    const farms = await this.#baseRepo.findAllByData<FarmModel>({
-      column: DB_TABLES.FARMS,
-      where: "dealer",
-      equals: dealer_id,
-    });
+    const farms = await this.#baseRepo.findAllByData<FarmModel>(
+      DB_TABLES.FARMS,
+      { dealer }
+    );
 
     return farms;
   };

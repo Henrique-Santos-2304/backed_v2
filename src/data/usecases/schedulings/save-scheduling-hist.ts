@@ -18,10 +18,8 @@ export class SaveSchedulingHistory implements IBaseUseCases {
   private async getUserLogin(author?: string) {
     if (!author) return "";
 
-    const user = await this.#baseRepo.findOne<UserModel>({
-      column: DB_TABLES.USERS,
-      where: "user_id",
-      equals: author,
+    const user = await this.#baseRepo.findOne<UserModel>(DB_TABLES.USERS, {
+      user_id: author,
     });
 
     if (!user) this.#console.warn("Author do agendamento não encontrado");
@@ -47,14 +45,14 @@ export class SaveSchedulingHistory implements IBaseUseCases {
       await this.getUserLogin(author)
     );
 
-    const scheduling = await this.#baseRepo.create<SchedulingModel>({
-      column: DB_TABLES.SCHEDULINGS,
-      data: entity,
-    });
+    const scheduling = await this.#baseRepo.create<SchedulingModel>(
+      DB_TABLES.SCHEDULINGS,
+      entity
+    );
 
     if (!scheduling) {
       this.#console.warn("Erro ao criar agendamento");
-      return;
+      return {} as SchedulingModel;
     }
 
     if (!is_board) {

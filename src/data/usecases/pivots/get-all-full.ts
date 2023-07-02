@@ -8,7 +8,7 @@ export class GetAllPivotsFull implements IBaseUseCases {
   #baseRepo: IBaseRepository;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
   }
 
   execute: IGetAllPivotFull = async (farm_id: string) => {
@@ -16,11 +16,10 @@ export class GetAllPivotsFull implements IBaseUseCases {
 
     const response = [];
 
-    const pivots = await this.#baseRepo.findAllByData<PivotModel>({
-      column: DB_TABLES.PIVOTS,
-      where: "farm_id",
-      equals: farm_id,
-    });
+    const pivots = await this.#baseRepo.findAllByData<PivotModel>(
+      DB_TABLES.PIVOTS,
+      { farm_id }
+    );
 
     if (!pivots || pivots?.length <= 0) return [];
 

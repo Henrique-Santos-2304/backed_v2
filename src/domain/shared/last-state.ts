@@ -6,4 +6,5 @@ export type ReturnLastStateProps = Pick<
 > &
   Pick<StateVariableModel, "percentimeter" | "angle"> & {
     last_timestamp: string;
+    pressure: boolean;
   };

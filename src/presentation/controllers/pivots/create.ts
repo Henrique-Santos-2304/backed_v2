@@ -10,7 +10,6 @@ export class CreatePivotController implements IBaseController<CreatePivotDto> {
     response,
     next
   ) => {
-    console.log("request");
     const callback = async () => {
       return await Injector.get<IBaseUseCases>(
         INJECTOR_CASES.PIVOTS.CREATE

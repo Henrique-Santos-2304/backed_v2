@@ -12,8 +12,8 @@ export class UpdatePivotUseCase {
   #iot: IIotConnect;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
   }
 
   createEntity(oldData: PivotModel, newDate: PivotModel) {
@@ -35,18 +35,14 @@ export class UpdatePivotUseCase {
     this.initInstances();
 
     this.#console.log(`Iniciando atualização do pivô ${pivot?.pivot_id}`);
-    const oldPivot = await checkPivotExist(
-      this.#baseRepo.findOne,
-      pivot?.pivot_id
-    );
+    const oldPivot = await checkPivotExist(pivot?.pivot_id);
     const newPivot = this.createEntity(oldPivot, pivot);
 
-    await this.#baseRepo.update({
-      column: DB_TABLES.PIVOTS,
-      where: "pivot_id",
-      equals: pivot?.pivot_id,
-      data: newPivot,
-    });
+    await this.#baseRepo.update(
+      DB_TABLES.PIVOTS,
+      { pivot_id: pivot?.pivot_id },
+      newPivot
+    );
 
     if (isGateway) {
       await this.#iot?.publisher(`${pivot?.farm_id}_0`, this.mountData(pivot));

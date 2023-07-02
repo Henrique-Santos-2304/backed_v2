@@ -18,11 +18,10 @@ export class AuthUseCase implements IBaseUseCases {
   #token: ITokenValidator;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
-    this.#encrypter =
-      this.#encrypter ?? Injector.get(INJECTOR_COMMONS.APP_ENCRYPTER);
-    this.#token = this.#token ?? Injector.get(INJECTOR_COMMONS.APP_TOKEN);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#encrypter = Injector.get(INJECTOR_COMMONS.APP_ENCRYPTER);
+    this.#token = Injector.get(INJECTOR_COMMONS.APP_TOKEN);
   }
 
   private async comparePassword(password: UserModel["password"], hash: string) {
@@ -31,10 +30,8 @@ export class AuthUseCase implements IBaseUseCases {
   }
 
   private async checkExists(login: UserModel["login"]): Promise<UserModel> {
-    const user = await this.#baseRepo?.findOne<UserModel>({
-      column: DB_TABLES.USERS,
-      where: "login",
-      equals: login,
+    const user = await this.#baseRepo?.findOne<UserModel>(DB_TABLES.USERS, {
+      login,
     });
 
     if (!user) throw new Error("Invalid Credentials");

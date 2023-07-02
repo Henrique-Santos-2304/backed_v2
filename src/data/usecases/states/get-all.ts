@@ -7,19 +7,15 @@ export class GetAllStatesUseCase implements IBaseUseCases {
   #baseRepo: IBaseRepository;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
   }
 
   execute = async (pivot_id: string) => {
     this.initInstances();
-    await checkPivotExist(this.#baseRepo.findOne, pivot_id);
+    await checkPivotExist(pivot_id);
 
     return (
-      (await this.#baseRepo.findAllByData({
-        column: DB_TABLES.STATES,
-        where: "pivot_id",
-        equals: pivot_id,
-      })) || []
+      (await this.#baseRepo.findAllByData(DB_TABLES.STATES, { pivot_id })) || []
     );
   };
 }

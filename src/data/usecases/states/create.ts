@@ -6,15 +6,31 @@ import { StateModel } from "@db/models";
 import { CreateStateDto } from "@db/dto";
 import { MutationStateVO } from "@db/value-objects";
 
-import { DB_TABLES, INJECTOR_COMMONS, INJECTOR_REPOS } from "@root/shared";
-import { IAppLog, IBaseRepository, IBaseUseCases, IHashId } from "@root/domain";
+import {
+  DB_TABLES,
+  INJECTOR_CASES,
+  INJECTOR_COMMONS,
+  INJECTOR_REPOS,
+} from "@root/shared";
+import {
+  IAppLog,
+  IBaseRepository,
+  IBaseUseCases,
+  IHashId,
+  SendMessageSignalType,
+} from "@root/domain";
 import { Injector } from "@root/main/injector";
+import { checkFarmExist } from "../farms/helpers";
 
 export class CreateStateUseCase implements IBaseUseCases {
   #baseRepo: IBaseRepository;
+  #sendMessageSignal: IBaseUseCases<SendMessageSignalType>;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#sendMessageSignal = Injector.get(
+      INJECTOR_CASES.COMMONS.SEND_MESSAGES_SIGNAL
+    );
   }
 
   private checkLastStateEquals(oldState: StateModel, newState: CreateStateDto) {
@@ -24,6 +40,24 @@ export class CreateStateUseCase implements IBaseUseCases {
     const connectionEquals = oldState?.connection === newState?.connection;
 
     return powerEquals && waterEquals && directionEquals && connectionEquals;
+  }
+
+  private async sendMessageSignal(
+    farm_id: string,
+    oldState: StateModel,
+    newState: CreateStateDto
+  ) {
+    const powerEquals = oldState?.power === newState.power;
+    const connectionEquals = oldState?.connection === newState.connection;
+
+    if (powerEquals && connectionEquals) return;
+    const farm = await checkFarmExist(farm_id);
+
+    await this.#sendMessageSignal.execute({
+      farm_name: farm?.farm_name,
+      users: [farm?.user_id, farm?.dealer!, ...farm.users!],
+      state: newState,
+    });
   }
 
   createEntity(state: CreateStateDto) {
@@ -36,12 +70,9 @@ export class CreateStateUseCase implements IBaseUseCases {
   execute = async (state: CreateStateDto) => {
     this.initInstances();
 
-    await checkPivotExist(this.#baseRepo.findOne, state?.pivot_id);
+    const piv = await checkPivotExist(state?.pivot_id);
 
-    const lastState = await getLastStateFull(
-      this.#baseRepo.findLast,
-      state?.pivot_id
-    );
+    const lastState = await getLastStateFull(state?.pivot_id);
 
     const statesEquals = this.checkLastStateEquals(lastState, state);
 
@@ -54,9 +85,8 @@ export class CreateStateUseCase implements IBaseUseCases {
 
     const stateEntity = this.createEntity({ ...state });
 
-    return await this.#baseRepo.create({
-      column: DB_TABLES.STATES,
-      data: stateEntity,
-    });
+    await this.sendMessageSignal(piv?.farm_id, lastState, state);
+
+    return await this.#baseRepo.create(DB_TABLES.STATES, stateEntity);
   };
 }

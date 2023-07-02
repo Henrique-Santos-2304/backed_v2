@@ -1,3 +1,4 @@
+import { CheckPivotsInterval } from "@root/data";
 import { IAppLog, IHandlerMessageIot, IIotConnect } from "@root/domain";
 import { Injector } from "@root/main/injector";
 import { INJECTOR_COMMONS } from "@root/shared";
@@ -44,7 +45,9 @@ export class IotConfig implements IIotConnect {
     this.#console.warn("Conectando ao AWS Iot Core...");
 
     this.#connection?.on("connect", () => {
-      this.#console.warn(`Conexão efetuada com sucesso!   \n`);
+      this.#console.warn(`AWS Conectada com sucesso!   \n`);
+      CheckPivotsInterval.start();
+
       this.#connection?.subscribe(this.#topics, {
         qos: 0,
       });

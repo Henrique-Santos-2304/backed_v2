@@ -1,26 +1,27 @@
+import { prisma } from "@root/core";
+
 export type QueryWhereCondition = {
   where: string;
   equals: string;
 };
 
 export type DbTables =
-  | "users"
-  | "farms"
-  | "pivots"
-  | "states"
-  | "state_variables"
-  | "radio_variables"
-  | "schedulings"
-  | "scheduling_historys";
+  | "user"
+  | "farm"
+  | "pivot"
+  | "state"
+  | "stateVariable"
+  | "radioVariable"
+  | "scheduling";
 
 export type ConstantsType = {
-  USERS: "users";
-  FARMS: "farms";
-  PIVOTS: "pivots";
-  STATES: "states";
-  STATE_VARIABLES: "state_variables";
-  RADIO_VARIABLES: "radio_variables";
-  SCHEDULINGS: "schedulings";
+  USERS: "user";
+  FARMS: "farm";
+  PIVOTS: "pivot";
+  STATES: "state";
+  STATE_VARIABLES: "stateVariable";
+  RADIO_VARIABLES: "radioVariable";
+  SCHEDULINGS: "scheduling";
 };
 
 export type IQueryFindBase = { column: DbTables } & QueryWhereCondition;

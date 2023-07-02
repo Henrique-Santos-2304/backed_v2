@@ -8,18 +8,16 @@ export class GetAllFarmsByUserUseCase implements IBaseUseCases {
   #baseRepo: IBaseRepository;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
   }
 
   execute: IGetByDealerFarmExecute = async (user_id) => {
     this.initInstances();
 
-    const farms = await this.#baseRepo.findAll<FarmModel>({
-      column: DB_TABLES.FARMS,
+    const farms = await this.#baseRepo.findAllByData(DB_TABLES.FARMS, {
+      OR: [{ user_id }, { users: { has: user_id } }],
     });
 
-    return farms?.filter(
-      (farm) => farm?.user_id === user_id || farm?.users?.includes(user_id)
-    );
+    return (farms as unknown as FarmModel[]) || [];
   };
 }

@@ -4,6 +4,7 @@ import {
   IBaseUseCases,
   IIotConnect,
   IObservables,
+  IWriteLogs,
 } from "@root/domain";
 import { StateModel, StateVariableModel } from "@root/infra/models";
 import { Injector } from "@root/main/injector";
@@ -15,10 +16,10 @@ import {
 } from "@root/shared";
 import { getLastStateFull } from "../states/helpers/get-state";
 import { checkPivotExist } from "../pivots/helpers";
+import { CheckPressure } from "../states";
 
 export class ReceveidStatus implements IBaseUseCases {
-  #baseRepo: IBaseRepository;
-  #iot: IIotConnect;
+  #checkPresure: CheckPressure;
   #saveLastState: IBaseUseCases;
   #createState: IBaseUseCases;
   #createVariable: IBaseUseCases;
@@ -26,8 +27,7 @@ export class ReceveidStatus implements IBaseUseCases {
   #angleObserver: IObservables;
 
   private initInstances() {
-    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
-    this.#iot = Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#checkPresure = Injector.get(INJECTOR_CASES.STATES.PRESSURE);
 
     this.#saveLastState = Injector.get(INJECTOR_CASES.PIVOTS.SAVE_LAST_STATE);
 
@@ -71,28 +71,59 @@ export class ReceveidStatus implements IBaseUseCases {
     });
   }
 
+  private async checkPivotInPressure(
+    pivot_id: string,
+    state: string,
+    payload: string[]
+  ) {
+    const exists = this.#checkPresure?.check(pivot_id);
+
+    const is_pressure = state[1] === "7";
+
+    if (!exists && !is_pressure) return;
+    if (exists && is_pressure) return true;
+
+    const isFinalPressure = exists && !is_pressure;
+
+    isFinalPressure
+      ? this.#checkPresure.dispatch(payload)
+      : this.#checkPresure.execute(payload);
+
+    return true;
+  }
+
   async execute(payload: string[]) {
     this.initInstances();
 
-    console.log(payload);
-
     const [_, pivot_id, state, percent, angle, __] = payload;
 
-    await checkPivotExist(this.#baseRepo.findOne, pivot_id);
+    Injector.get<IWriteLogs>(INJECTOR_COMMONS.WRITE_LOGS).write(
+      "MESSAGE",
+      pivot_id,
+      payload.join("-")
+    );
+
+    await checkPivotExist(pivot_id);
+
+    const inPressure = await this.checkPivotInPressure(
+      pivot_id,
+      state,
+      payload
+    );
+
+    if (inPressure) return;
 
     this.#angleObserver.dispatch(pivot_id, Number(angle));
     const author = await this.#actionObserver.dispatch(pivot_id);
 
     await this.saveLasteState(payload.join("-"));
 
-    const newState = await this.createState(pivot_id, state, author || null);
+    const newState =
+      (await this.createState(pivot_id, state, author || null)) ||
+      (await getLastStateFull(pivot_id));
 
-    const state_id =
-      newState?.state_id ||
-      (await getLastStateFull(this.#baseRepo.findLast, pivot_id))?.state_id;
+    if (!newState?.state_id) return;
 
-    if (!state_id) return;
-
-    const newVariable = await this.createVariable(state_id, percent, angle);
+    await this.createVariable(newState?.state_id, percent, angle);
   }
 }

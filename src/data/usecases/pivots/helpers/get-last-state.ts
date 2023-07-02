@@ -16,13 +16,15 @@ export const getLastState = async (
   pivot: PivotModel
 ): Promise<ReturnLastStateProps> => {
   const date = Injector.get<IAppDate>(INJECTOR_COMMONS.APP_DATE);
-  if (!pivot?.last_state || pivot?.last_state === "000-000") {
+
+  if (!pivot?.last_state || pivot?.last_state.startsWith("000")) {
     return {
       direction: "CLOCKWISE",
       water: false,
       power: false,
       percentimeter: 0,
       angle: 0,
+      pressure: false,
       connection: false,
       last_timestamp: date.toDateSpString(pivot?.last_timestamp || new Date()),
     };
@@ -37,6 +39,7 @@ export const getLastState = async (
     percentimeter: Number(percent),
     connection: true,
     angle: Number(angle),
+    pressure: base[1] === "7",
     last_timestamp: date.toDateSpString(pivot?.last_timestamp || timestamp),
   };
 };

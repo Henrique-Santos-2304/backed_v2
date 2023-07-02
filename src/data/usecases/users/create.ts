@@ -13,6 +13,7 @@ import {
   ITokenValidator,
 } from "@root/domain";
 import { Injector } from "@root/main/injector";
+import { checkUserExists } from "./helpers";
 
 export class CreateUserUseCase implements IBaseUseCases {
   #console: IAppLog;
@@ -22,29 +23,13 @@ export class CreateUserUseCase implements IBaseUseCases {
   #hash: IHashId;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
 
-    this.#token = this.#token ?? Injector.get(INJECTOR_COMMONS.APP_TOKEN);
-    this.#hash = this.#hash ?? Injector.get(INJECTOR_COMMONS.APP_HASH);
+    this.#token = Injector.get(INJECTOR_COMMONS.APP_TOKEN);
+    this.#hash = Injector.get(INJECTOR_COMMONS.APP_HASH);
 
-    this.#encrypter =
-      this.#encrypter ?? Injector.get(INJECTOR_COMMONS.APP_ENCRYPTER);
-  }
-
-  private async findUser(login: CreateUserDto["login"]): Promise<UserModel> {
-    const query = {
-      column: DB_TABLES.USERS,
-      where: "login",
-      equals: login,
-    };
-
-    return await checkDataExists<UserModel>(
-      this.#baseRepo.findOne,
-      query,
-      "usuário",
-      false
-    );
+    this.#encrypter = Injector.get(INJECTOR_COMMONS.APP_ENCRYPTER);
   }
 
   private createEntity = (dto: CreateUserDto): UserModel => {
@@ -56,16 +41,13 @@ export class CreateUserUseCase implements IBaseUseCases {
     this.initInstances();
 
     this.#console.log("Iniciando criação de usuário ");
-    await this.findUser(dto?.login);
+    await checkUserExists({ login: dto?.login }, false);
     const user = this.createEntity(dto);
 
     const { password, secret, ...restUser } = user;
     const token = this.#token?.encrypt(restUser);
 
-    await this.#baseRepo.create<UserModel>({
-      column: DB_TABLES.USERS,
-      data: user,
-    });
+    await this.#baseRepo.create<UserModel>(DB_TABLES.USERS, user);
 
     this.#console.log("Criação de usuário realizada com sucesso \n");
     return { ...restUser, token };

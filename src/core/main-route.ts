@@ -10,6 +10,7 @@ import { radioVariablesRoutes } from "./routes/radio-variables";
 import { Injector } from "@root/main/injector";
 import { IBaseController } from "@root/domain";
 import { INJECTOR_CONTROLS } from "@root/shared";
+import { actionsRoutes } from "./routes/actions";
 
 function error(
   err: unknown,
@@ -34,10 +35,7 @@ export const expressRouters = () =>
     .use("/cycles", cyclesRoutes())
     .use("/radio_variables", radioVariablesRoutes())
     .use("/schedulings", schedulingsRoutes())
-    .post(
-      "/actions/create/:id",
-      Injector.get<IBaseController>(INJECTOR_CONTROLS.STATES.ACTION).handle
-    );
+    .use("/actions", actionsRoutes());
 
 /*
 router.use('/states', stateRoute);

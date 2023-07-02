@@ -7,14 +7,14 @@ export class GetAllUserUseCase {
   #console: IAppLog;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
   }
 
   async execute() {
     this.initInstances();
 
-    const users = await this.#baseRepo.findAll({ column: DB_TABLES.USERS });
+    const users = await this.#baseRepo.findAll(DB_TABLES.USERS);
 
     return users || [];
   }

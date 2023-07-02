@@ -10,11 +10,13 @@ export const INJECTOR_COMMONS = {
   IOT_HANDLER_MESSAGE: "iot_handler_message",
   IOT_CONFIG: "iot_config",
   SERVER: "server",
+  SOCKET: "socket",
   APP_DATE: "app_date",
   APP_LOGS: "app_logs",
   APP_ENCRYPTER: "app_encrypter",
   APP_TOKEN: "app_token",
   APP_HASH: "app_hash",
+  WRITE_LOGS: "write_logs",
 };
 
 export const INJECTOR_CASES = {
@@ -22,6 +24,7 @@ export const INJECTOR_CASES = {
     RECEIVED_STATUS: "cases_received_status",
     GET_INITIAL_DATA: "cases_get_initial_data",
     SCHEDULE_MANAGER: "schedule_manager",
+    SEND_MESSAGES_SIGNAL: "send_message_signal",
   },
   USERS: {
     CREATE: "case_user_create",
@@ -49,6 +52,7 @@ export const INJECTOR_CASES = {
     DELETE: "case_pivot_delete",
     PUT: "case_pivot_update",
     SAVE_LAST_STATE: "case_pivot_save_last_state",
+    SAVE_CONNECTION_FALSE: "case_pivot_save_conn_false",
 
     GET_FULL: "case_pivot_get_full",
     GET_ALL_FULL: "case_pivot_get_all_full",
@@ -59,9 +63,12 @@ export const INJECTOR_CASES = {
   STATES: {
     CREATE: "case_state_create",
     ACTION: "case_state_create_action",
+    CHECK_STATUS: "case_check_status",
 
     GET_ALL: "case_state_get_all",
     GET_HISTORY: "case_state_get_history",
+    CHECK_ALL_STATUS: "cases_check_status",
+    PRESSURE: "pressure",
   },
 
   STATE_VARIABLES: {
@@ -123,6 +130,7 @@ export const INJECTOR_CONTROLS = {
   STATES: {
     GET_HISTORY: "controls_state_get_history",
     ACTION: "controls_state_create_action",
+    CHECK_ALL_STATUS: "controls_check_status",
   },
 
   RADIO_VARIABLES: {
@@ -145,4 +153,5 @@ export const INJECTOR_OBSERVABLES = {
   ACTION: "create_action_observer",
   SCHEDULE: "scheduling_action",
   ANGLE_JOB: "schedule_angle",
+  STATUS: "status-to-pivot",
 };

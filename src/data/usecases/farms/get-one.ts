@@ -8,14 +8,13 @@ export class GetOneFarmUseCase implements IBaseUseCases {
   #baseRepo: IBaseRepository;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
   }
 
   execute: IGetOneFarmExecute = async (farm_id) => {
     this.initInstances();
 
-    const farm = await checkFarmExist(this.#baseRepo.findOne, farm_id);
-    console.log(farm);
+    const farm = await checkFarmExist(farm_id);
     return farm || null;
   };
 }

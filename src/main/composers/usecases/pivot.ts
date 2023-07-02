@@ -4,6 +4,7 @@ import {
   GetAllPivotUseCase,
   GetAllPivotsFull,
   GetPivotFull,
+  SaveConnectionFalsePivotUseCase,
   SaveLastStatePivotUseCase,
   UpdatePivotUseCase,
 } from "@root/data/usecases/pivots";
@@ -19,6 +20,12 @@ export const injectPivotsCases = async () => {
   Injector.add(new GetAllPivotUseCase(), INJECTOR_CASES.PIVOTS.GET_ALL);
   Injector.add(new GetPivotFull(), INJECTOR_CASES.PIVOTS.GET_FULL);
   Injector.add(new GetAllPivotsFull(), INJECTOR_CASES.PIVOTS.GET_ALL_FULL);
+
+  Injector.add(
+    new SaveConnectionFalsePivotUseCase(),
+    INJECTOR_CASES.PIVOTS.SAVE_CONNECTION_FALSE
+  );
+
   Injector.add(
     new SaveLastStatePivotUseCase(),
     INJECTOR_CASES.PIVOTS.SAVE_LAST_STATE

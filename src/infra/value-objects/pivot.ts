@@ -49,6 +49,10 @@ export class MutationPivotVO {
     this.#pivot = {
       ...oldPivot,
       ...newPivot,
+      pivot_num:
+        oldPivot?.pivot_num === newPivot?.pivot_num
+          ? oldPivot?.pivot_num
+          : Number(newPivot?.pivot_num),
       farm_id: oldPivot?.farm_id,
       last_angle: oldPivot?.last_angle,
       last_state: oldPivot?.last_state,
@@ -61,7 +65,7 @@ export class MutationPivotVO {
       radio_id:
         oldPivot?.pivot_num === newPivot?.pivot_num
           ? oldPivot?.radio_id
-          : newPivot?.pivot_num,
+          : Number(newPivot?.pivot_num),
     };
 
     return this;

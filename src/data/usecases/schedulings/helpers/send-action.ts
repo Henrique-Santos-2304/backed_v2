@@ -98,12 +98,11 @@ export class SchedulerSendAction {
         },
       });
 
-      await baseRepo.update<Partial<SchedulingModel>>({
-        column: DB_TABLES.SCHEDULINGS,
-        where: "scheduling_id",
-        equals: job?.scheduling_id,
-        data: { status: is_stop ? "FINISHED" : "RUNNING" },
-      });
+      await baseRepo.update<SchedulingModel>(
+        DB_TABLES.SCHEDULINGS,
+        { scheduling_id: job?.scheduling_id },
+        { status: is_stop ? "FINISHED" : "RUNNING" }
+      );
 
       const scheduler = Injector.get<IScheduler>(
         INJECTOR_CASES.COMMONS.SCHEDULE_MANAGER

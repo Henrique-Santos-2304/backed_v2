@@ -1,13 +1,15 @@
-import { IAppDate, IBaseUseCases } from "@root/domain";
+import { IAppDate, IBaseRepository, IBaseUseCases } from "@root/domain";
 import { IStateRepo, IStateVariableRepo } from "@root/domain/repos";
 
 import { StateModel } from "@root/infra/models";
 import { Injector } from "@root/main/injector";
-import { INJECTOR_REPOS } from "@root/shared";
+import { DB_TABLES, INJECTOR_COMMONS, INJECTOR_REPOS } from "@root/shared";
 import {
   IGetStateHistoryExec,
   PartialCycleResponse,
 } from "@root/domain/usecases";
+import { prisma } from "@root/core";
+import { State } from "@prisma/client";
 
 const initialCycle = {
   states: [],
@@ -17,7 +19,8 @@ const initialCycle = {
 
 export class GetHistoryStateOfPivot implements IBaseUseCases {
   #appDate: IAppDate;
-  #stateRepo: IStateRepo;
+  #baseRepo: IBaseRepository;
+
   #variableRepo: IStateVariableRepo;
 
   #response: PartialCycleResponse[] = [];
@@ -25,9 +28,10 @@ export class GetHistoryStateOfPivot implements IBaseUseCases {
   #stateIsRunning: boolean = false;
 
   private initInstances() {
-    this.#stateRepo = this.#stateRepo ?? Injector.get(INJECTOR_REPOS.STATE);
-    this.#variableRepo =
-      this.#variableRepo ?? Injector.get(INJECTOR_REPOS.STATE_VARIABLES);
+    this.#appDate = Injector.get(INJECTOR_COMMONS.APP_DATE);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+
+    this.#variableRepo = Injector.get(INJECTOR_REPOS.STATE_VARIABLES);
   }
 
   private initCycleState(state: StateModel) {
@@ -133,11 +137,11 @@ export class GetHistoryStateOfPivot implements IBaseUseCases {
     const startDate = this.#appDate.handleDateToHistories(start_date, 0);
     const endDate = this.#appDate.handleDateToHistories(end_date, 24);
 
-    const states = await this.#stateRepo?.getHistoryCycle(
+    const states = (await this.#baseRepo.findAllByData(DB_TABLES.STATES, {
       pivot_id,
-      startDate,
-      endDate
-    );
+      connection: true,
+      timestamp: { gte: startDate, lt: endDate },
+    })) as unknown as StateModel[];
 
     if (!states || states.length <= 0) {
       console.warn("Não exitem alterações de estado nesse periodo.\n");

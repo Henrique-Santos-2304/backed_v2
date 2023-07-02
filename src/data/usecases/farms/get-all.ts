@@ -7,14 +7,12 @@ export class GetAllFarmsUseCase implements IBaseUseCases {
   #baseRepo: IBaseRepository;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
   }
 
   async execute() {
     this.initInstances();
 
-    return await this.#baseRepo.findAll<FarmModel>({
-      column: DB_TABLES.FARMS,
-    });
+    return await this.#baseRepo.findAll<FarmModel>(DB_TABLES.FARMS);
   }
 }

@@ -22,26 +22,27 @@ class AddUserIntoFarmUseCase {
   }
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#iot = this.#iot ?? Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#iot = Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
   }
 
   execute: IAddUserToFarmExecute = async ({ user_id, farm_id, isGateway }) => {
     this.initInstances();
 
-    const farm = await checkFarmExist(this.#baseRepo.findOne, farm_id);
-    await checkUserExists(this.#baseRepo.findOne, user_id);
+    const farm = await checkFarmExist(farm_id);
+    await checkUserExists({ user_id });
 
     this.checkUserAlreadyExistsInFarm(user_id!, farm);
 
     const newUsers = [...farm?.users!, user_id];
 
-    const newFarm = await this.#baseRepo.update({
-      column: DB_TABLES.FARMS,
-      where: "farm_id",
-      equals: farm?.farm_id!,
-      data: { ...farm, users: newUsers },
-    });
+    const newFarm = await this.#baseRepo.update<FarmModel>(
+      DB_TABLES.FARMS,
+      { farm_id },
+      {
+        users: newUsers,
+      }
+    );
 
     if (!isGateway) {
       await this.#iot?.publisher(`${farm?.farm_id}_0`, `2001:ADD-${user_id}`);

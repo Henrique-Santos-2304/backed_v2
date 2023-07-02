@@ -4,6 +4,7 @@ import { FarmModel, UserModel } from "@root/infra/models";
 import { DB_TABLES, INJECTOR_COMMONS, INJECTOR_REPOS } from "@root/shared";
 import { checkDataExists } from "@root/shared/db-helpers";
 import { Injector } from "@root/main/injector";
+import { checkUserExists } from "./helpers";
 
 export class DeleteUserUseCase implements IBaseUseCases {
   #baseRepo: IBaseRepository;
@@ -15,28 +16,22 @@ export class DeleteUserUseCase implements IBaseUseCases {
   }
 
   private async delUser(user_id: string) {
-    await this.#baseRepo.delete({
-      column: DB_TABLES.USERS,
-      where: "user_id",
-      equals: user_id,
-    });
+    await this.#baseRepo.delete<UserModel>(DB_TABLES.USERS, { user_id });
   }
 
   private async putFarm(farm: FarmModel) {
-    await this.#baseRepo.update({
-      column: DB_TABLES.FARMS,
-      where: "farm_id",
-      equals: farm?.farm_id,
-      data: farm,
-    });
+    await this.#baseRepo.update<FarmModel>(
+      DB_TABLES.FARMS,
+      { farm_id: farm?.farm_id },
+      farm
+    );
   }
 
-  private async getFarmsUserDealer(user_id: string) {
-    const farms = await this.#baseRepo.findAllByData({
-      column: DB_TABLES.FARMS,
-      where: "dealer",
-      equals: user_id,
-    });
+  private async getFarmsUserDealer(dealer: string) {
+    const farms = await this.#baseRepo.findAllByData<FarmModel>(
+      DB_TABLES.FARMS,
+      { dealer }
+    );
 
     if (farms?.length <= 0) return;
 
@@ -46,15 +41,13 @@ export class DeleteUserUseCase implements IBaseUseCases {
   }
 
   private async getFarmsUserWork(user_id: string) {
-    const farms = await this.#baseRepo.findAll<FarmModel>({
-      column: DB_TABLES.FARMS,
-    });
+    const farms = (await this.#baseRepo.findAllByData(DB_TABLES.FARMS, {
+      users: { has: user_id },
+    })) as unknown as FarmModel[];
 
-    const exist = farms?.filter((u) => u.users?.includes(user_id));
+    if (farms?.length <= 0) return;
 
-    if (exist?.length <= 0) return;
-
-    for (let farm of exist) {
+    for (let farm of farms) {
       await this.putFarm({
         ...farm,
         users: farm?.users?.filter((f) => f !== user_id) || [],
@@ -66,16 +59,7 @@ export class DeleteUserUseCase implements IBaseUseCases {
     this.initInstances();
 
     this.#console.log("Iniciando deleção de usuário");
-    const user = await checkDataExists<UserModel>(
-      this.#baseRepo.findOne,
-      {
-        column: DB_TABLES.USERS,
-        where: "user_id",
-        equals: user_id,
-      },
-      "Usuário",
-      true
-    );
+    const user = await checkUserExists({ user_id });
 
     if (user?.user_type === "DEALER") {
       await this.getFarmsUserDealer(user_id);

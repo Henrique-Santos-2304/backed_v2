@@ -1,12 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import {
-  IQueryCreateBase,
-  IQueryDeleteBase,
-  IQueryDeleteALLBase,
-  IQueryFindBase,
-  IQueryFindAllBase,
-  IQueryUpdateBase,
-} from "./repos";
+import { DbTables } from "./repos";
 
 export type IIsGateway = { isGateway: boolean };
 
@@ -23,18 +16,16 @@ export interface IBaseController<R = any> {
 }
 
 export interface IBaseRepository {
-  create<P, R = any>({ column, data }: IQueryCreateBase<P>): Promise<R>;
-  delete({ column, where }: IQueryDeleteBase): Promise<void>;
-  deleteAll({ column }: IQueryDeleteALLBase): Promise<void>;
-  deleteByDate({
-    column,
-    where,
-    start,
-    end,
-  }: IQueryDeleteBase & { start: Date; end: Date }): Promise<void>;
-  findOne<R = any>({ column, where }: IQueryFindBase): Promise<R>;
-  findLast<R = any>({ column, where }: IQueryFindBase): Promise<R>;
-  findAll<R = any>({ column }: IQueryFindAllBase): Promise<R[]>;
-  findAllByData<R = any>({ column, where }: IQueryFindBase): Promise<R[]>;
-  update<P, R = any>({ column, data, where }: IQueryUpdateBase<P>): Promise<R>;
+  create<P = any>(model: DbTables, data: P): Promise<P>;
+  delete<P = any>(model: DbTables, where: Partial<P>): Promise<void>;
+  deleteAll<P = any>(model: DbTables, where: Partial<P>): Promise<void>;
+  findOne<P = any>(model: DbTables, where: Partial<P>): Promise<P>;
+  findLast<P = any>(model: DbTables, where: Partial<P>): Promise<P>;
+  findAll<P = any>(model: DbTables): Promise<P[]>;
+  findAllByData<P = any>(model: DbTables, where: Partial<P>): Promise<P[]>;
+  update<P = any>(
+    model: DbTables,
+    where: Partial<P>,
+    data: Partial<P>
+  ): Promise<P>;
 }

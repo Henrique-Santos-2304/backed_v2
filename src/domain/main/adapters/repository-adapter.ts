@@ -1,7 +1,7 @@
 import { DbTables } from "@contracts/repos";
 
 type RepositoryAdapterParams<R = any> = {
-  columnName: DbTables;
+  columnName: string;
   callback: () => Promise<R>;
 };
 

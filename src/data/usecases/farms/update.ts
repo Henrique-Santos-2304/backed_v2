@@ -13,9 +13,9 @@ export class UpdateFarmUseCase {
   #console: IAppLog;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#iot = this.#iot ?? Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
-    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#iot = Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
   }
 
   createEntity(old: FarmModel, newFarm: FarmModel) {
@@ -27,16 +27,15 @@ export class UpdateFarmUseCase {
     this.initInstances();
 
     this.#console.log(`Atualizando fazenda ${farm?.farm_id}`);
-    const exists = await checkFarmExist(this.#baseRepo.findOne, farm?.farm_id);
+    const exists = await checkFarmExist(farm?.farm_id);
 
     const newFarm = this.createEntity(exists, farm);
 
-    const updated = await this.#baseRepo.update({
-      column: DB_TABLES.FARMS,
-      where: "farm_id",
-      equals: farm?.farm_id,
-      data: newFarm,
-    });
+    const updated = await this.#baseRepo.update<FarmModel>(
+      DB_TABLES.FARMS,
+      { farm_id: farm?.farm_id },
+      newFarm
+    );
 
     await this.#iot?.publisher(
       `${updated?.farm_id}_0`,

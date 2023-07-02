@@ -1,19 +1,14 @@
-import knex from "@core/db";
 import { repositoryAdapter } from "@main/adapters";
 import { DB_TABLES } from "@shared/constants";
 
 import { SchedulingModel } from "../models";
 import { ISchedulingRepo } from "@root/domain/repos";
+import { prisma } from "@root/core";
 
 export class SchedulingRepo implements ISchedulingRepo {
   async dates(pivot_id: string): Promise<SchedulingModel[]> {
     const callback = async () => {
-      return await knex(DB_TABLES.SCHEDULINGS)
-        .select("*")
-        .where({ pivot_id, status: "PENDING" })
-        .where((query) => {
-          query.where({ type: "STOP_DATE" }).orWhere({ type: "FULL_DATE" });
-        });
+      return [] as SchedulingModel[];
     };
 
     return (await repositoryAdapter({
@@ -24,12 +19,7 @@ export class SchedulingRepo implements ISchedulingRepo {
 
   async angles(pivot_id: string): Promise<SchedulingModel[]> {
     const callback = async () => {
-      return await knex(DB_TABLES.SCHEDULINGS)
-        .select("*")
-        .where({ pivot_id, status: "PENDING" })
-        .where((query) => {
-          query.where({ type: "STOP_ANGLE" }).orWhere({ type: "FULL_ANGLE" });
-        });
+      return [] as SchedulingModel[];
     };
 
     return (await repositoryAdapter({

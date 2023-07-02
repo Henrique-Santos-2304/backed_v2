@@ -60,21 +60,27 @@ export class DeleteSchedulingUseCase implements IBaseUseCases {
     });
   }
 
-  private async delSchedule(schedule_id: string) {
-    await this.#baseRepo.delete({
-      column: DB_TABLES.SCHEDULINGS,
-      where: "scheduling_id",
-      equals: schedule_id,
+  private async delSchedule(scheduling_id: string) {
+    await this.#baseRepo.delete<SchedulingModel>(DB_TABLES.SCHEDULINGS, {
+      scheduling_id,
     });
+  }
+
+  private async cheSchedulingExists(id: string) {
+    const scheduling = await this.#baseRepo.findOne<SchedulingModel>(
+      DB_TABLES.SCHEDULINGS,
+      { start_date_of_module: id }
+    );
+
+    if (!scheduling) throw new Error("Agendmaento não encontrado");
+
+    return scheduling;
   }
 
   execute: IDelSchedulingHistExecute = async ({ scheduling_id }) => {
     this.initInstances();
 
-    const scheduling = await checkSchedulingExist(
-      this.#baseRepo.findOne,
-      scheduling_id
-    );
+    const scheduling = await this.cheSchedulingExists(scheduling_id);
 
     const running = this.#date.dateIsAter(
       new Date(),
@@ -93,7 +99,7 @@ export class DeleteSchedulingUseCase implements IBaseUseCases {
           scheduling?.is_stop ? "end" : "start"
         }`
       );
-      return await this.delSchedule(scheduling_id);
+      return await this.delSchedule(scheduling?.scheduling_id);
     }
 
     await this.startBoardSchedule(scheduling);

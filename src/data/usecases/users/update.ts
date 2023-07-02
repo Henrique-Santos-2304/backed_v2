@@ -12,6 +12,7 @@ import {
   ITokenValidator,
 } from "@root/domain";
 import { Injector } from "@root/main/injector";
+import { checkUserExists } from "./helpers";
 
 export class UpdateUserUseCase {
   #baseRepo: IBaseRepository;
@@ -21,14 +22,13 @@ export class UpdateUserUseCase {
   #encrypter: IEncrypt;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
 
-    this.#token = this.#token ?? Injector.get(INJECTOR_COMMONS.APP_TOKEN);
-    this.#hash = this.#hash ?? Injector.get(INJECTOR_COMMONS.APP_HASH);
+    this.#token = Injector.get(INJECTOR_COMMONS.APP_TOKEN);
+    this.#hash = Injector.get(INJECTOR_COMMONS.APP_HASH);
 
-    this.#encrypter =
-      this.#encrypter ?? Injector.get(INJECTOR_COMMONS.APP_ENCRYPTER);
+    this.#encrypter = Injector.get(INJECTOR_COMMONS.APP_ENCRYPTER);
   }
 
   private createEntity(old: UserModel, user: UserModel) {
@@ -41,25 +41,17 @@ export class UpdateUserUseCase {
 
     this.#console.log("Atualizando usuário");
 
-    const exists = await checkDataExists<UserModel>(
-      this.#baseRepo.findOne,
-      {
-        column: DB_TABLES.USERS,
-        where: "user_id",
-        equals: user?.user_id!,
-      },
-      "Usuário",
-      true
-    );
-
+    console.log("passou check");
+    const exists = await checkUserExists({ user_id: user?.user_id! });
+    console.log(exists);
     const newUser = this.createEntity(exists, user);
 
-    const updated = await this.#baseRepo.update<UserModel>({
-      column: DB_TABLES.USERS,
-      where: "user_id",
-      equals: user?.user_id!,
-      data: newUser,
-    });
+    const updated = await this.#baseRepo.update<UserModel>(
+      DB_TABLES.USERS,
+      { user_id: user?.user_id },
+      newUser
+    );
+
     this.#console.log("Finalizando Atualização de usuário\n");
 
     return updated;

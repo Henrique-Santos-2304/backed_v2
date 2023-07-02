@@ -26,28 +26,29 @@ export class CreateFarmUseCase implements IBaseUseCases {
   }
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
-    this.#uuid = this.#uuid ?? Injector.get(INJECTOR_COMMONS.APP_HASH);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#uuid = Injector.get(INJECTOR_COMMONS.APP_HASH);
   }
 
   execute: ICreateFarmExecute = async (farm: CreateFarmDto) => {
     this.initInstances();
 
     this.#console.log(`Criando nova Fazenda ${farm?.farm_id}`);
-    await checkFarmExist(this.#baseRepo.findOne, farm?.farm_id, false);
+    await checkFarmExist(farm?.farm_id, false);
 
-    await checkUserExists(this.#baseRepo.findOne, farm?.user_id);
+    await checkUserExists({ user_id: farm?.user_id });
 
     if (farm?.dealer && farm?.dealer !== "none") {
-      await checkUserExists(this.#baseRepo.findOne, farm?.dealer);
+      await checkUserExists({ user_id: farm?.dealer });
     }
 
     const entity = this.createEntity({ ...farm });
-    const newFarm = await this.#baseRepo.create<FarmModel>({
-      column: DB_TABLES.FARMS,
-      data: entity,
-    });
+
+    const newFarm = await this.#baseRepo.create<FarmModel>(
+      DB_TABLES.FARMS,
+      entity
+    );
 
     this.#console.log("Fazenda criada com sucesso \n");
     return newFarm;

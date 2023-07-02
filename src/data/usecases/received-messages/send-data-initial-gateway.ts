@@ -1,12 +1,18 @@
+import { Farm } from "@prisma/client";
 import {
   IAppLog,
   IBaseRepository,
   IBaseUseCases,
   ITokenValidator,
 } from "@root/domain";
-import { FarmModel, UserModel } from "@root/infra/models";
+import { PivotModel, UserModel } from "@root/infra/models";
 import { Injector } from "@root/main/injector";
-import { DB_TABLES, INJECTOR_COMMONS, INJECTOR_REPOS } from "@root/shared";
+import {
+  DB_TABLES,
+  INJECTOR_CASES,
+  INJECTOR_COMMONS,
+  INJECTOR_REPOS,
+} from "@root/shared";
 
 export class GetInitialDataGateway implements IBaseUseCases<string> {
   #baseRepo: IBaseRepository;
@@ -27,19 +33,10 @@ export class GetInitialDataGateway implements IBaseUseCases<string> {
     );
 
     let dealer: UserModel | null = null;
-    let users: UserModel[] = [];
 
     const [sudo, farm] = await Promise.all([
-      this.#baseRepo.findOne<UserModel>({
-        column: DB_TABLES.USERS,
-        where: "login",
-        equals: "soil",
-      }),
-      this.#baseRepo.findOne<FarmModel>({
-        column: DB_TABLES.FARMS,
-        where: "farm_id",
-        equals: farm_id,
-      }),
+      this.#baseRepo.findOne<UserModel>(DB_TABLES.USERS, { login: "soil" }),
+      this.#baseRepo.findOne<Farm>(DB_TABLES.FARMS, {}),
     ]);
 
     if (!farm) {
@@ -48,41 +45,19 @@ export class GetInitialDataGateway implements IBaseUseCases<string> {
     }
 
     const [pivots, owner] = await Promise.all([
-      this.#baseRepo.findAllByData({
-        column: DB_TABLES.PIVOTS,
-        where: "farm_id",
-        equals: farm?.farm_id,
-      }),
-      this.#baseRepo.findOne<UserModel>({
-        column: DB_TABLES.USERS,
-        where: "user_id",
-        equals: farm?.user_id,
+      this.#baseRepo.findAllByData<PivotModel>(DB_TABLES.PIVOTS, { farm_id }),
+      this.#baseRepo.findOne<UserModel>(DB_TABLES.USERS, {
+        user_id: farm?.user_id,
       }),
     ]);
 
     if (farm?.dealer && farm?.dealer !== "none") {
-      dealer = await this.#baseRepo.findOne<UserModel>({
-        column: DB_TABLES.USERS,
-        where: "user_id",
-        equals: farm?.dealer,
+      dealer = await this.#baseRepo.findOne<UserModel>(DB_TABLES.USERS, {
+        user_id: farm?.dealer,
       });
     }
 
-    if (farm?.users && farm?.users.length > 0) {
-      for (let us of users) {
-        const newUser = await this.#baseRepo.findOne<UserModel>({
-          column: DB_TABLES.USERS,
-          where: "user_id",
-          equals: us?.user_id!,
-        });
-
-        if (!newUser) return;
-        users = [
-          ...users,
-          { ...newUser, password: this.#token.decrypt(newUser?.secret!) },
-        ];
-      }
-    }
+    const users = Injector.get(INJECTOR_CASES.FARMS.GET_USERS).execute(farm_id);
 
     const userSudo = {
       ...sudo,

@@ -13,8 +13,8 @@ export class CreateStateVariableUseCase implements IBaseUseCases {
   #console: IAppLog;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
   }
 
   private checkValues(old: number, newNum: number) {
@@ -50,10 +50,7 @@ export class CreateStateVariableUseCase implements IBaseUseCases {
   execute = async (variable: CreateStateVariableDto) => {
     this.initInstances();
 
-    const lastState = await getLastStateVariable(
-      this.#baseRepo.findLast,
-      variable?.state_id
-    );
+    const lastState = await getLastStateVariable(variable?.state_id);
 
     const statesEquals = this.checkLastStateEquals(lastState, variable);
 
@@ -66,10 +63,11 @@ export class CreateStateVariableUseCase implements IBaseUseCases {
 
     const stateEntity = this.createEntity({ ...variable });
 
-    console.log("");
-    return await this.#baseRepo.create<StateVariableModel>({
-      column: DB_TABLES.STATE_VARIABLES,
-      data: stateEntity,
-    });
+    console.log(stateEntity);
+
+    return await this.#baseRepo.create<StateVariableModel>(
+      DB_TABLES.STATE_VARIABLES,
+      stateEntity
+    );
   };
 }

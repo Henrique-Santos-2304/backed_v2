@@ -1,21 +1,20 @@
 import { IBaseRepository } from "@root/domain";
 import { PivotModel } from "@root/infra/models";
-import { DB_TABLES } from "@root/shared";
+import { Injector } from "@root/main/injector";
+import { DB_TABLES, INJECTOR_REPOS } from "@root/shared";
 import { checkDataExists } from "@root/shared/db-helpers";
 
 export const checkPivotExist = async (
-  repo: IBaseRepository["findOne"],
   pivot_id: string,
   exists: boolean = true
 ): Promise<PivotModel> => {
-  return await checkDataExists<PivotModel>(
-    repo,
-    {
-      column: DB_TABLES.PIVOTS,
-      where: "pivot_id",
-      equals: pivot_id,
-    },
-    "Pivôs",
-    exists
-  );
+  const baseRepo = Injector.get<IBaseRepository>(INJECTOR_REPOS.BASE);
+  const pivot = await baseRepo.findOne<PivotModel>(DB_TABLES.PIVOTS, {
+    pivot_id,
+  });
+
+  if (exists && !pivot) throw new Error("Pivô não encontrada");
+  if (!exists && pivot) throw new Error("Pivô já existe");
+
+  return pivot;
 };

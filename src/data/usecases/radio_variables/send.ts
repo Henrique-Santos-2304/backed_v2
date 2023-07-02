@@ -20,16 +20,15 @@ export class SendRadioVariables implements IBaseUseCases {
   #observable: IObservables;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#iot = this.#iot ?? Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
-    this.#observable =
-      this.#observable ?? Injector.get(INJECTOR_OBSERVABLES.GATEWAY_COMM);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#iot = Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
+    this.#observable = Injector.get(INJECTOR_OBSERVABLES.GATEWAY_COMM);
   }
 
   execute: ISendRadioVariableExec = async ({ pivot_id, type }) => {
     this.initInstances();
 
-    const piv = await checkPivotExist(this.#baseRepo.findOne, pivot_id);
+    const piv = await checkPivotExist(pivot_id);
 
     if (piv.is_gprs) return;
     const idps = IDPS as { [key: string]: string };
@@ -39,6 +38,6 @@ export class SendRadioVariables implements IBaseUseCases {
       `#${idps[type.toUpperCase()]}-${piv?.radio_id}`
     );
 
-    this.#observable.subscribe(idps[type.toUpperCase()], pivot_id);
+    this.#observable.subscribe({ idp: idps[type.toUpperCase()], pivot_id });
   };
 }

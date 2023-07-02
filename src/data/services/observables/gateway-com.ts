@@ -40,7 +40,7 @@ export class GatewayComunicattionObservable implements IObservables {
     cb();
   }
 
-  subscribe(idp: string, pivot_id: string) {
+  subscribe({ idp, pivot_id }: { idp: string; pivot_id: string }) {
     const exists = this.check(idp, pivot_id);
 
     if (exists) return;

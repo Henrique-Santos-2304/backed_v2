@@ -9,7 +9,6 @@ import {
   IAppLog,
   IBaseRepository,
   IBaseUseCases,
-  IIotConnect,
   IObservables,
   IScheduler,
   ScheduleStub,
@@ -68,10 +67,8 @@ export class UpdateSchedulingUseCase implements IBaseUseCases {
       return;
     }
 
-    await this.#baseRepo.delete({
-      column: DB_TABLES.SCHEDULINGS,
-      where: "scheduling_id",
-      equals: scheduling?.scheduling_id,
+    await this.#baseRepo.delete<SchedulingModel>(DB_TABLES.SCHEDULINGS, {
+      scheduling_id: scheduling?.scheduling_id,
     });
 
     return await this.#createSchedule.execute({
@@ -81,10 +78,8 @@ export class UpdateSchedulingUseCase implements IBaseUseCases {
   }
 
   private async startLocalSchedule(scheduling: SchedulingModel) {
-    await this.#baseRepo.delete({
-      column: DB_TABLES.SCHEDULINGS,
-      where: "scheduling_id",
-      equals: scheduling?.scheduling_id,
+    await this.#baseRepo.delete<SchedulingModel>(DB_TABLES.SCHEDULINGS, {
+      scheduling_id: scheduling?.scheduling_id,
     });
 
     this.#managerScheduler.stop(
@@ -119,10 +114,7 @@ export class UpdateSchedulingUseCase implements IBaseUseCases {
   execute: IPutSchedulingHistExecute = async ({ schedule }) => {
     this.initInstances();
 
-    const scheduling = await checkSchedulingExist(
-      this.#baseRepo.findOne,
-      schedule?.scheduling_id
-    );
+    const scheduling = await checkSchedulingExist(schedule?.scheduling_id);
 
     const running = this.#date.dateIsAter(
       new Date(),

@@ -21,9 +21,9 @@ export class CreatePivotUseCase implements IBaseUseCases {
   #iot: IIotConnect;
 
   private initInstances() {
-    this.#baseRepo = this.#baseRepo ?? Injector.get(INJECTOR_REPOS.BASE);
-    this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
-    this.#iot = this.#iot ?? Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
+    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
+    this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
+    this.#iot = Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
   }
 
   private createEntity(pivot: CreatePivotDto) {
@@ -46,20 +46,16 @@ export class CreatePivotUseCase implements IBaseUseCases {
 
     this.#console.log(`Criando novo Pivô para fazenda ${pivot?.farm_id}`);
     await Promise.all([
-      checkPivotExist(
-        this.#baseRepo.findOne,
-        `${pivot?.farm_id}_${pivot?.pivot_num}`,
-        false
-      ),
-      checkFarmExist(this.#baseRepo.findOne, pivot?.farm_id),
+      checkPivotExist(`${pivot?.farm_id}_${pivot?.pivot_num}`, false),
+      checkFarmExist(pivot?.farm_id),
     ]);
 
     const entity = this.createEntity(pivot);
 
-    const newPivot = await this.#baseRepo.create<PivotModel>({
-      column: DB_TABLES.PIVOTS,
-      data: entity,
-    });
+    const newPivot = await this.#baseRepo.create<PivotModel>(
+      DB_TABLES.PIVOTS,
+      entity
+    );
 
     if (isGateway) {
       await this.#iot?.publisher(

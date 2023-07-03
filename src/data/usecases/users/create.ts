@@ -3,7 +3,8 @@ import { UserModel } from "@db/models";
 import { DB_TABLES, INJECTOR_COMMONS, INJECTOR_REPOS } from "@root/shared";
 import { MutationUserVO } from "@db/value-objects";
 import { ICreateUserExecute } from "@contracts/usecases";
-import { checkDataExists } from "@shared/db-helpers";
+import { Injector } from "@root/main/injector";
+import { checkUserExists } from "./helpers";
 import {
   IAppLog,
   IBaseRepository,
@@ -12,8 +13,6 @@ import {
   IHashId,
   ITokenValidator,
 } from "@root/domain";
-import { Injector } from "@root/main/injector";
-import { checkUserExists } from "./helpers";
 
 export class CreateUserUseCase implements IBaseUseCases {
   #console: IAppLog;
@@ -37,11 +36,23 @@ export class CreateUserUseCase implements IBaseUseCases {
     return vo.create({ ...dto }).find();
   };
 
+  private checkUserTypeIsValid = (user_type: string) => {
+    if (
+      user_type !== "SUDO" &&
+      user_type !== "DEALER" &&
+      user_type !== "OWNER" &&
+      user_type !== "WORKER"
+    ) {
+      throw new Error("User Type Is Invalid");
+    }
+  };
+
   execute: ICreateUserExecute = async (dto) => {
     this.initInstances();
 
     this.#console.log("Iniciando criação de usuário ");
-    await checkUserExists({ login: dto?.login }, false);
+    this.checkUserTypeIsValid(dto.user_type);
+    await checkUserExists({ username: dto?.username }, false);
     const user = this.createEntity(dto);
 
     const { password, secret, ...restUser } = user;

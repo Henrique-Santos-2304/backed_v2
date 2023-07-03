@@ -29,9 +29,11 @@ export class AuthUseCase implements IBaseUseCases {
     if (!isEquals) throw new Error("Invalid Credentials");
   }
 
-  private async checkExists(login: UserModel["login"]): Promise<UserModel> {
+  private async checkExists(
+    username: UserModel["username"]
+  ): Promise<UserModel> {
     const user = await this.#baseRepo?.findOne<UserModel>(DB_TABLES.USERS, {
-      login,
+      username,
     });
 
     if (!user) throw new Error("Invalid Credentials");
@@ -39,25 +41,30 @@ export class AuthUseCase implements IBaseUseCases {
   }
 
   private async generateToken(user: UserModel) {
-    const { login, user_id, user_type } = user;
+    const { username, user_id, user_type } = user;
     return this.#token?.encrypt({
-      login,
+      username,
       user_id,
       user_type,
     });
   }
 
-  execute: IAuthUserExecute = async ({ login, password }) => {
+  execute: IAuthUserExecute = async ({ username, password }) => {
     this.initInstances();
 
-    this.#console.log(`Iniciando autenticação do usuário ${login}`);
-    const user = await this.checkExists(login);
+    this.#console.log(`Iniciando autenticação do usuário ${username}`);
+    const user = await this.checkExists(username);
 
     await this.comparePassword(password, user.password);
 
     const token = await this.generateToken(user);
     this.#console.log(`Usuário logado com sucesso\n`);
 
-    return { user_id: user?.user_id, user_type: user?.user_type, token };
+    return {
+      user_id: user?.user_id,
+      user_type: user?.user_type,
+      username: user?.username,
+      token,
+    };
   };
 }

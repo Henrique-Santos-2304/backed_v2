@@ -1,7 +1,7 @@
 class UserModel {
   user_id?: string;
 
-  login: string;
+  username: string;
 
   password: string;
 

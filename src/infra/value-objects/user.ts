@@ -15,7 +15,7 @@ export class MutationUserVO {
 
   private checkDataEquals(oldData: UserModel, newData: UserModel) {
     const passwordEquals = oldData.password === newData.password;
-    const loginEquals = oldData.login === newData.login;
+    const loginEquals = oldData.username === newData.username;
     const userTypeEquals = oldData.user_type === newData.user_type;
 
     return {
@@ -46,7 +46,7 @@ export class MutationUserVO {
       this.#user.secret = this.jwt.encrypt(newUser?.password);
     }
 
-    this.#user.login = newUser.login;
+    this.#user.username = newUser.username;
     this.#user.user_type = newUser?.user_type;
 
     return this;

@@ -1,7 +1,9 @@
 import { Server } from "http";
+import { Express } from "express";
 
 export interface IAppServer {
   start(): void;
+  getApp(): Express;
   getHttpServer(): Server;
 }
 

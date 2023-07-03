@@ -1,7 +1,11 @@
 import { UserModel } from "../models";
 
 export class CreateUserDto {
-  login: UserModel["login"];
+  username: UserModel["username"];
   password: UserModel["password"];
   user_type: UserModel["user_type"];
 }
+
+// Ola
+//Ola
+// Ola

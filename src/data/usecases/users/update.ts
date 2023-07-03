@@ -41,9 +41,7 @@ export class UpdateUserUseCase {
 
     this.#console.log("Atualizando usuário");
 
-    console.log("passou check");
     const exists = await checkUserExists({ user_id: user?.user_id! });
-    console.log(exists);
     const newUser = this.createEntity(exists, user);
 
     const updated = await this.#baseRepo.update<UserModel>(

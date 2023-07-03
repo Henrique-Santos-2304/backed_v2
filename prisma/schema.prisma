@@ -168,7 +168,7 @@ model State {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model User {
   user_id   String    @id @db.Uuid
-  login     String    @unique(map: "users_login_unique") @db.VarChar(255)
+  username     String    @unique(map: "users_login_unique") @db.VarChar(255)
   password  String    @db.VarChar(255)
   user_type String?   @default("USER")
   secret    String?   @db.VarChar(255)

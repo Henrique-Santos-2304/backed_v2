@@ -12,8 +12,8 @@ export type ICreateUserExecute = IBaseUseCases<
 >["execute"];
 
 export type IAuthUserExecute = IBaseUseCases<
-  Pick<UserModel, "login" | "password">,
-  Omit<ICreateUserResponse, "login">
+  Pick<UserModel, "username" | "password">,
+  Omit<ICreateUserResponse, "username">
 >["execute"];
 
 export type IDelUserExecute = IBaseUseCases<string, void>["execute"];

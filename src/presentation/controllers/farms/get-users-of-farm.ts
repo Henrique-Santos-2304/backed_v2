@@ -15,6 +15,7 @@ export class UserOfFarmController implements IBaseController<UserModel[]> {
         INJECTOR_CASES.FARMS.GET_USERS
       ).execute(request.params.id);
     };
+
     return await controllerAdapter({ response, callback, next });
   };
 }

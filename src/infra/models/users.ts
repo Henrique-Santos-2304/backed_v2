@@ -1,5 +1,5 @@
 class UserModel {
-  user_id?: string;
+  id?: string;
 
   username: string;
 

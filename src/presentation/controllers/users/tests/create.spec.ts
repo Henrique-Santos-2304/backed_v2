@@ -1,10 +1,10 @@
+import { server } from "@root/app";
 import { AppServer } from "@root/core";
 import { IBaseRepository } from "@root/domain";
 import { Injector } from "@root/main/injector";
 import { DB_TABLES, INJECTOR_REPOS } from "@root/shared";
 import request from "supertest";
 describe("Create User Integration", () => {
-  const server = new AppServer();
   beforeAll(() => {
     server.start();
   });

@@ -2,7 +2,6 @@ import { IAppLog, IBaseRepository, IBaseUseCases } from "@root/domain";
 import { IDelUserExecute } from "@root/domain/usecases";
 import { FarmModel, UserModel } from "@root/infra/models";
 import { DB_TABLES, INJECTOR_COMMONS, INJECTOR_REPOS } from "@root/shared";
-import { checkDataExists } from "@root/shared/db-helpers";
 import { Injector } from "@root/main/injector";
 import { checkUserExists } from "./helpers";
 
@@ -15,14 +14,14 @@ export class DeleteUserUseCase implements IBaseUseCases {
     this.#console = this.#console ?? Injector.get(INJECTOR_COMMONS.APP_LOGS);
   }
 
-  private async delUser(user_id: string) {
-    await this.#baseRepo.delete<UserModel>(DB_TABLES.USERS, { user_id });
+  private async delUser(id: string) {
+    await this.#baseRepo.delete<UserModel>(DB_TABLES.USERS, { id });
   }
 
   private async putFarm(farm: FarmModel) {
     await this.#baseRepo.update<FarmModel>(
       DB_TABLES.FARMS,
-      { farm_id: farm?.farm_id },
+      { id: farm?.id },
       farm
     );
   }
@@ -42,7 +41,7 @@ export class DeleteUserUseCase implements IBaseUseCases {
 
   private async getFarmsUserWork(user_id: string) {
     const farms = (await this.#baseRepo.findAllByData(DB_TABLES.FARMS, {
-      users: { has: user_id },
+      workers: { has: user_id },
     })) as unknown as FarmModel[];
 
     if (farms?.length <= 0) return;
@@ -50,7 +49,7 @@ export class DeleteUserUseCase implements IBaseUseCases {
     for (let farm of farms) {
       await this.putFarm({
         ...farm,
-        users: farm?.users?.filter((f) => f !== user_id) || [],
+        workers: farm?.workers?.filter((f) => f !== user_id) || [],
       });
     }
   }
@@ -59,7 +58,7 @@ export class DeleteUserUseCase implements IBaseUseCases {
     this.initInstances();
 
     this.#console.log("Iniciando deleção de usuário");
-    const user = await checkUserExists({ user_id });
+    const user = await checkUserExists({ id: user_id });
 
     if (user?.user_type === "DEALER") {
       await this.getFarmsUserDealer(user_id);

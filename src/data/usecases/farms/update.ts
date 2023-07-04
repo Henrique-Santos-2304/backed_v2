@@ -1,6 +1,6 @@
 import { IAppLog, IBaseRepository, IIotConnect } from "@contracts/index";
 import { IPutFarmExecute } from "@root/domain/usecases";
-import { FarmModel } from "@root/infra/models";
+import { FarmModel, PivotModel } from "@root/infra/models";
 import { checkFarmExist } from "./helpers";
 import { MutationFarmVO } from "@root/infra/value-objects";
 
@@ -18,32 +18,56 @@ export class UpdateFarmUseCase {
     this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
   }
 
-  createEntity(old: FarmModel, newFarm: FarmModel) {
+  private createEntity(old: FarmModel, newFarm: FarmModel) {
     const vo = new MutationFarmVO();
     return vo.update(old, newFarm).find();
   }
 
-  execute: IPutFarmExecute = async ({ farm, isGateway }) => {
+  private async checkFarmIdEqualsAndPutPivots(
+    oldFarmId: string,
+    newFarmId: string
+  ) {
+    if (oldFarmId === newFarmId) return;
+    const pivots = await this.#baseRepo.findAllByData<PivotModel>(
+      DB_TABLES.PIVOTS,
+      { farm_id: newFarmId }
+    );
+
+    if (!pivots || pivots?.length <= 0) return;
+
+    for (let pivot of pivots) {
+      await this.#baseRepo.update(
+        DB_TABLES.PIVOTS,
+        { id: pivot?.id },
+        {
+          id: `${newFarmId}_${pivot?.num}`,
+        }
+      );
+    }
+  }
+
+  execute: IPutFarmExecute = async ({ farm, farm_id, isGateway }) => {
     this.initInstances();
 
-    this.#console.log(`Atualizando fazenda ${farm?.farm_id}`);
-    const exists = await checkFarmExist(farm?.farm_id);
+    this.#console.log(`Atualizando fazenda ${farm_id}`);
+    const exists = await checkFarmExist(farm_id);
 
     const newFarm = this.createEntity(exists, farm);
 
     const updated = await this.#baseRepo.update<FarmModel>(
       DB_TABLES.FARMS,
-      { farm_id: farm?.farm_id },
+      { id: farm_id },
       newFarm
     );
 
+    await this.checkFarmIdEqualsAndPutPivots(farm_id, farm?.id);
+
     await this.#iot?.publisher(
-      `${updated?.farm_id}_0`,
-      `2001:U-${updated?.user_id}-${updated?.farm_id}-${updated?.farm_name}-${
-        updated?.farm_city
-      }-${updated?.farm_lat}-${updated?.farm_lng}${
-        updated?.dealer ? `-${updated?.dealer}` : ""
-      }`
+      `${updated?.id}_0`,
+      JSON.stringify({
+        type: "PUT_FARM",
+        ...updated,
+      })
     );
 
     this.#console.log("Finalizada atualização do usuário");

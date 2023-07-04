@@ -1,8 +1,7 @@
+import { server } from "@root/app";
 import { AppServer } from "@root/core";
 import request from "supertest";
 describe("Auth User Integration", () => {
-  const server = new AppServer();
-
   beforeAll(async () => {
     server.start();
     await request(server.getApp()).post("/users").send({
@@ -40,7 +39,7 @@ describe("Auth User Integration", () => {
     });
 
     expect(promise.body).toHaveProperty("token");
-    expect(promise.body).toHaveProperty("user_id");
+    expect(promise.body).toHaveProperty("id");
     expect(promise.body).toHaveProperty("username", "soil");
     expect(promise.body).toHaveProperty("user_type", "SUDO");
   });

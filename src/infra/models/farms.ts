@@ -1,19 +1,19 @@
-class FarmModel {
-  farm_id: string;
+export class FarmModel {
+  id: string;
 
-  users?: string[];
+  workers?: string[];
 
   dealer: string | null;
 
-  user_id: string;
+  owner: string;
 
-  farm_name: string;
+  name: string;
 
-  farm_city: string;
+  city: string;
 
-  farm_lng: number;
+  longitude: number;
 
-  farm_lat: number;
+  latitude: number;
+
+  timezone: string;
 }
-
-export { FarmModel };

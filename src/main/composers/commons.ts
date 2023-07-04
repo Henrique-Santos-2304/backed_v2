@@ -9,7 +9,7 @@ import {
   INJECTOR_CASES,
   INJECTOR_COMMONS,
 } from "@root/shared";
-import { SocketConnect } from "@root/core";
+import { AppServer, SocketConnect } from "@root/core";
 
 export const injectCommons = async () => {
   Injector.add(new IotHandlerMessage(), INJECTOR_COMMONS.IOT_HANDLER_MESSAGE);

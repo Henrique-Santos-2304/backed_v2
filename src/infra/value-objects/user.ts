@@ -25,7 +25,7 @@ export class MutationUserVO {
   }
 
   create(user: CreateUserDto) {
-    this.#user.user_id = this.uuidGenerator.generate();
+    this.#user.id = this.uuidGenerator.generate();
     this.#user = { ...this.#user, ...user };
     this.#user.secret = this.jwt.encrypt(user.password);
 

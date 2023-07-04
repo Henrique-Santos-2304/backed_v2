@@ -1,7 +1,6 @@
 import { UserModel } from "@db/models";
 import { DB_TABLES, INJECTOR_COMMONS, INJECTOR_REPOS } from "@root/shared";
 import { MutationUserVO } from "@db/value-objects";
-import { checkDataExists } from "@shared/db-helpers";
 import { IPutUserExecute } from "@contracts/usecases";
 
 import {
@@ -41,12 +40,12 @@ export class UpdateUserUseCase {
 
     this.#console.log("Atualizando usuário");
 
-    const exists = await checkUserExists({ user_id: user?.user_id! });
+    const exists = await checkUserExists({ id: user?.id! });
     const newUser = this.createEntity(exists, user);
 
     const updated = await this.#baseRepo.update<UserModel>(
       DB_TABLES.USERS,
-      { user_id: user?.user_id },
+      { id: user?.id },
       newUser
     );
 

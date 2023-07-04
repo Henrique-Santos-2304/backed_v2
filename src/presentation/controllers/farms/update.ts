@@ -13,7 +13,7 @@ export class PutFarmController implements IBaseController<FarmModel> {
     const callback = async () => {
       return await Injector.get<IBaseUseCases>(
         INJECTOR_CASES.FARMS.PUT
-      ).execute({ farm: request.body });
+      ).execute({ farm: request.body, farm_id: request.params.id });
     };
 
     return await controllerAdapter({ response, callback, next });

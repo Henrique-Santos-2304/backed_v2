@@ -1,9 +1,9 @@
+import { server } from "@root/app";
 import { AppServer } from "@root/core";
 import { checkUserExists } from "@root/data/usecases/users/helpers";
 import request from "supertest";
 describe("Update User Integration", () => {
   let user = {} as any;
-  const server = new AppServer();
 
   beforeAll(async () => {
     server.start();
@@ -27,7 +27,7 @@ describe("Update User Integration", () => {
 
   it("[e2e] Should be throw Token not found ", async () => {
     const response = await request(server.getApp()).put("/users").send({
-      user_id: "error",
+      id: "error",
     });
     expect(response.statusCode).toBe(401);
     expect(response.text).toEqual("Unauthorized");
@@ -37,7 +37,7 @@ describe("Update User Integration", () => {
       .put("/users")
       .set("Authorization", "Invalid Token")
       .send({
-        user_id: "error",
+        id: "error",
       });
     expect(response.statusCode).toBe(401);
     expect(response).toHaveProperty("text", "Invalid Token!");
@@ -53,7 +53,7 @@ describe("Update User Integration", () => {
       .put("/users")
       .set("Authorization", userReq?.body.token)
       .send({
-        user_id: "error",
+        id: "error",
       });
 
     expect(response.text).toEqual("Usuário não tem acesso para ação");
@@ -69,7 +69,7 @@ describe("Update User Integration", () => {
       .put("/users")
       .set("Authorization", userReq?.body.token)
       .send({
-        user_id: "error",
+        id: "error",
       });
 
     expect(response.text).toEqual("Usuário não tem acesso para ação");
@@ -85,18 +85,18 @@ describe("Update User Integration", () => {
       .put("/users")
       .set("Authorization", userReq?.body.token)
       .send({
-        user_id: "error",
+        id: "error",
       });
 
     expect(response.text).toEqual("Usuário não tem acesso para ação");
   });
 
-  it("[e2e] Should be throw user not found if received user_id invalid ", async () => {
+  it("[e2e] Should be throw user not found if received id invalid ", async () => {
     const response = await request(server.getApp())
       .put("/users")
       .set("Authorization", user?.token)
       .send({
-        user_id: "error",
+        id: "error",
       });
 
     expect(response.statusCode).toBe(400);
@@ -109,13 +109,13 @@ describe("Update User Integration", () => {
       .put("/users")
       .set("Authorization", user?.token)
       .send({
-        user_id: userFounded.user_id,
+        id: userFounded.id,
         username: "soil",
         password: "4321",
         user_type: "SUDO",
       });
 
-    expect(promise.body).toHaveProperty("user_id");
+    expect(promise.body).toHaveProperty("id");
     expect(promise.body).toHaveProperty("username", "soil");
     expect(promise.body).toHaveProperty("user_type", "SUDO");
 

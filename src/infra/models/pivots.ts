@@ -1,10 +1,10 @@
 import { FarmModel } from "./farms";
 
 export class PivotModel {
-  pivot_id: string;
-  farm_id: FarmModel["farm_id"];
+  id: string;
+  farm_id: FarmModel["id"];
 
-  pivot_num: number;
+  num: number;
 
   pivot_lng: number;
 

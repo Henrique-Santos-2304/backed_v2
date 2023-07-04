@@ -13,7 +13,7 @@ export const controllerAdapter: ControllerAdapterType = async ({
     return response.status(200).json(res);
   } catch (error) {
     Injector.get<IAppLog>(INJECTOR_COMMONS.APP_LOGS).warn(
-      `Erro ao precessar requisição... Controler!!`
+      `Erro ao precessar requisição...!!`
     );
     Injector.get<IAppLog>(INJECTOR_COMMONS.APP_LOGS).error(
       `${error.message}\n`

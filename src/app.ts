@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { config } from "dotenv";
 import { AppServer } from "./core";
+import { cityMapping } from "city-timezones";
 
 config({
   path:
@@ -15,4 +16,5 @@ config({
       : ".env",
 });
 
-new AppServer().start();
+export const server = new AppServer();
+server.start();

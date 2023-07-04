@@ -1,9 +1,11 @@
-import { AppServer } from "@root/core";
+import { server } from "@root/app";
+import { IBaseRepository } from "@root/domain";
+import { Injector } from "@root/main/injector";
+import { DB_TABLES, INJECTOR_REPOS } from "@root/shared";
 
 import request from "supertest";
 describe("Delete User Integration", () => {
   let user = {} as any;
-  const server = new AppServer();
 
   beforeAll(async () => {
     server.start();
@@ -79,5 +81,39 @@ describe("Delete User Integration", () => {
       .set("Authorization", userReq?.body.token);
 
     expect(response.text).toEqual("Usuário não tem acesso para ação");
+  });
+  it("[e2e] Should be return all users ", async () => {
+    await Injector.get<IBaseRepository>(INJECTOR_REPOS.BASE).deleteAll(
+      DB_TABLES.USERS
+    );
+
+    for (let count = 0; count < 3; count++) {
+      await request(server.getApp())
+        .post("/users")
+        .send({
+          username: `new_user_${count}`,
+          password: "1234",
+          user_type:
+            count === 0
+              ? "WORKER"
+              : count === 1
+              ? "DEALER"
+              : count === 2
+              ? "OWNER"
+              : "SUDO",
+        });
+    }
+
+    const userReq = await request(server.getApp()).post("/users").send({
+      username: "get_sudo",
+      password: "1234",
+      user_type: "SUDO",
+    });
+
+    const response = await request(server.getApp())
+      .get("/users")
+      .set("Authorization", userReq?.body.token);
+
+    expect(response.body).toHaveLength(4);
   });
 });

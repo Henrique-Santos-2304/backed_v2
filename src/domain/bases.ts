@@ -18,7 +18,7 @@ export interface IBaseController<R = any> {
 export interface IBaseRepository {
   create<P = any>(model: DbTables, data: P): Promise<P>;
   delete<P = any>(model: DbTables, where: Partial<P>): Promise<void>;
-  deleteAll<P = any>(model: DbTables, where: Partial<P>): Promise<void>;
+  deleteAll<P = any>(model: DbTables, where?: Partial<P>): Promise<void>;
   findOne<P = any>(model: DbTables, where: Partial<P>): Promise<P>;
   findLast<P = any>(model: DbTables, where: Partial<P>): Promise<P>;
   findAll<P = any>(model: DbTables): Promise<P[]>;

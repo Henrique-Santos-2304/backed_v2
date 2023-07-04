@@ -10,6 +10,7 @@
     "start:dev": "cross-env ENV=dev  tsx watch src/app.ts",
     "start:test": "cross-env ENV=test  tsx watch src/app.ts",
     "init_migrate:dev": "dotenv -e .env.development -- npx prisma migrate dev --name=soil",
+    "init_migrate:test": "dotenv -e .env.test -- npx prisma migrate dev --name=soil",
     "generate:prod": "dotenv -e .env.production -- npx prisma generate ",
     "generate:dev": "dotenv -e .env.development -- npx prisma generate ",
     "studio:prod": "dotenv -e .env.production -- npx prisma studio ",
@@ -19,7 +20,7 @@
     "migrate:test": "dotenv -e .env.test -- npx prisma migrate deploy",
     "test": "dotenv -e .env.test -- jest --passWithNoTests --silent --noStackTrace --runInBand --detectOpenHandles --forceExit",
     "test:e2e": "npm test -- --config jest-e2e.config.js",
-    "test_debug_watch:e2e": "dotenv -e .env.test -- jest --config jest-e2e.config.js --watch",
+    "test_debug_watch:e2e": "dotenv -e .env.test -- jest --config jest-e2e.config.js --watch --passWithNoTests --noStackTrace --runInBand --detectOpenHandles --forceExit",
     "test_watch:e2e": "npm run test:e2e -- --watch"
   },
   "keywords": [],
@@ -28,6 +29,7 @@
   "dependencies": {
     "@prisma/client": "4.16.1",
     "aws-iot-device-sdk": "^2.2.12",
+    "city-timezones": "^1.2.1",
     "connect-timeout": "^1.9.0",
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",

@@ -1,3 +1,5 @@
+import { authorizeUserForActionMiddleware } from "@root/data/validators/middlewares";
+import authMiddleware from "@root/data/validators/middlewares/auth";
 import { IBaseController } from "@root/domain";
 import { Injector } from "@root/main/injector";
 import { INJECTOR_CONTROLS } from "@root/shared";
@@ -7,7 +9,9 @@ export const farmRoutes = () =>
   express
     .Router()
     .post(
-      "/addFarm",
+      "/",
+      authMiddleware,
+      authorizeUserForActionMiddleware,
       Injector.get<IBaseController>(INJECTOR_CONTROLS.FARMS.CREATE).handle
     )
     .post(
@@ -15,11 +19,15 @@ export const farmRoutes = () =>
       Injector.get<IBaseController>(INJECTOR_CONTROLS.FARMS.ADD_USER).handle
     )
     .put(
-      "/updateFarm",
+      "/:id",
+      authMiddleware,
+      authorizeUserForActionMiddleware,
       Injector.get<IBaseController>(INJECTOR_CONTROLS.FARMS.PUT).handle
     )
     .delete(
-      "/deleteFarm/:id",
+      "/:id",
+      authMiddleware,
+      authorizeUserForActionMiddleware,
       Injector.get<IBaseController>(INJECTOR_CONTROLS.FARMS.DELETE).handle
     )
     .get(

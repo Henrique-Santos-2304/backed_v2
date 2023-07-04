@@ -1,6 +1,8 @@
 import { FarmModel } from "../models";
 import { CreateFarmDto } from "@db/dto";
-import { IHashId } from "@contracts/index";
+import { IGetTimezone } from "@contracts/index";
+import { Injector } from "../config";
+import { INJECTOR_COMMONS } from "@root/shared";
 
 export class MutationFarmVO {
   #farm: FarmModel;
@@ -10,12 +12,12 @@ export class MutationFarmVO {
   }
 
   private checkDataEquals(oldData: FarmModel, newData: FarmModel) {
-    const idEquals = oldData.farm_id === newData.farm_id;
+    const idEquals = oldData.id === newData.id;
 
-    const cityEquals = oldData.farm_city === newData.farm_city;
-    const latEquals = oldData.farm_lat === newData.farm_lat;
-    const lngEquals = oldData.farm_lng === newData.farm_lng;
-    const nameEquals = oldData.farm_name === newData.farm_name;
+    const cityEquals = oldData.city === newData.city;
+    const latEquals = oldData.latitude === newData.latitude;
+    const lngEquals = oldData.longitude === newData.longitude;
+    const nameEquals = oldData.name === newData.name;
     const dealerEquals = oldData.dealer === newData.dealer;
 
     if (
@@ -30,11 +32,11 @@ export class MutationFarmVO {
     }
   }
 
-  create(uuidGenerator: IHashId, farm: CreateFarmDto) {
-    this.#farm.farm_id = uuidGenerator.generate();
+  create(farm: CreateFarmDto) {
     this.#farm = { ...this.#farm, ...farm };
     this.#farm.dealer = farm?.dealer || null;
-    this.#farm.users = [];
+    this.#farm.timezone = farm?.timezone;
+    this.#farm.workers = [];
 
     return this;
   }
@@ -42,7 +44,7 @@ export class MutationFarmVO {
   update(oldFarm: FarmModel, newFarm: FarmModel) {
     this.checkDataEquals(oldFarm, newFarm);
 
-    this.#farm = { ...oldFarm, ...newFarm, users: oldFarm?.users };
+    this.#farm = { ...oldFarm, ...newFarm, workers: oldFarm?.workers };
 
     return this;
   }

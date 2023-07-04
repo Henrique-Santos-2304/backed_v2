@@ -18,7 +18,7 @@ export type IDelFarmExecute = IBaseUseCases<string, void>["execute"];
 export type IGetOneFarmExecute = IBaseUseCases<string, FarmModel>["execute"];
 export type IGetAllFarmExecute = IBaseUseCases<void, FarmModel>["execute"];
 export type IPutFarmExecute = IBaseUseCases<
-  { farm: FarmModel; isGateway?: boolean },
+  { farm: FarmModel; farm_id: string; isGateway?: boolean },
   FarmModel
 >["execute"];
 export type IUsersOfFarmExecute = IBaseUseCases<

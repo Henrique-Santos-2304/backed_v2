@@ -1,3 +1,4 @@
+import { server } from "@root/app";
 import { AppServer } from "@root/core";
 import { checkUserExists } from "@root/data/usecases/users/helpers";
 import { IBaseRepository } from "@root/domain";
@@ -6,7 +7,6 @@ import { DB_TABLES, INJECTOR_REPOS } from "@root/shared";
 import request from "supertest";
 describe("Delete User Integration", () => {
   let user = {} as any;
-  const server = new AppServer();
 
   beforeAll(async () => {
     server.start();
@@ -29,9 +29,7 @@ describe("Delete User Integration", () => {
   });
 
   it("[e2e] Should be throw Token not found ", async () => {
-    const response = await request(server.getApp()).delete("/users/id").send({
-      user_id: "error",
-    });
+    const response = await request(server.getApp()).delete("/users/id");
     expect(response.statusCode).toBe(401);
     expect(response.text).toEqual("Unauthorized");
   });
@@ -107,7 +105,7 @@ describe("Delete User Integration", () => {
     expect(checkFirst).toHaveProperty("username", "for_del");
 
     await request(server.getApp())
-      .del(`/users/${userReq?.body.user_id}`)
+      .del(`/users/${userReq?.body.id}`)
       .set("Authorization", user?.token);
 
     const checkFinal = await Injector.get<IBaseRepository>(

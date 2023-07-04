@@ -41,10 +41,10 @@ export class AuthUseCase implements IBaseUseCases {
   }
 
   private async generateToken(user: UserModel) {
-    const { username, user_id, user_type } = user;
+    const { username, id, user_type } = user;
     return this.#token?.encrypt({
       username,
-      user_id,
+      id,
       user_type,
     });
   }
@@ -61,7 +61,7 @@ export class AuthUseCase implements IBaseUseCases {
     this.#console.log(`Usuário logado com sucesso\n`);
 
     return {
-      user_id: user?.user_id,
+      id: user?.id,
       user_type: user?.user_type,
       username: user?.username,
       token,

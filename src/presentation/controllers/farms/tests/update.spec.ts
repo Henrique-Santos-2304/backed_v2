@@ -1,6 +1,6 @@
 import { server } from "@root/app";
 import { IBaseRepository } from "@root/domain";
-import { FarmModel } from "@root/infra/models";
+import { FarmModel, UserModel } from "@root/infra/models";
 import { Injector } from "@root/main/injector";
 import { DB_TABLES, INJECTOR_REPOS } from "@root/shared";
 import request from "supertest";
@@ -74,6 +74,62 @@ describe("Update Farm Integration", () => {
     });
   });
 
+  it("[e2e] Should be added a new worker into farm and after remove this worker ", async () => {
+    const baseRepo = Injector.get<IBaseRepository>(INJECTOR_REPOS.BASE);
+
+    await request(server.getApp())
+      .post("/farms")
+      .set("Authorization", user?.token)
+      .send({
+        owner: user?.id,
+        id: "farm_for_del",
+        name: "farm_del",
+        city: "SP",
+        latitude: -22,
+        longitude: -44,
+        timezone: "America/Sao Paulo",
+      });
+
+    const farm = await baseRepo.findOne<FarmModel>(DB_TABLES.FARMS, {
+      id: "farm_for_del",
+    });
+
+    const added = await request(server.getApp())
+      .put(`/farms/${farm.id}`)
+      .set("Authorization", user?.token)
+      .send({
+        type: "ADD_WORKER",
+        id: farm?.id,
+        username: "worker_of_farm",
+        password: "1234",
+      });
+
+    const newUser = await baseRepo.findOne<UserModel>(DB_TABLES.USERS, {
+      username: "worker_of_farm",
+    });
+
+    expect(added.statusCode).toBe(200);
+    expect(added.body.workers).toHaveLength(1);
+    expect(newUser).toHaveProperty("id");
+
+    const response = await request(server.getApp())
+      .put(`/farms/${farm.id}`)
+      .set("Authorization", user?.token)
+      .send({
+        type: "REMOVE_WORKER",
+        id: farm?.id,
+        worker: newUser?.username,
+      });
+
+    const delUser = await baseRepo.findOne<UserModel>(DB_TABLES.USERS, {
+      username: "worker_of_farm",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.workers).toHaveLength(0);
+    expect(delUser).toBe(null);
+  });
+
   it("[e2e] Should be put farm with sucess ", async () => {
     await request(server.getApp())
       .post("/farms")
@@ -97,7 +153,7 @@ describe("Update Farm Integration", () => {
     const response = await request(server.getApp())
       .put(`/farms/${farm.id}`)
       .set("Authorization", user?.token)
-      .send({ ...farm, id: "changed_id" });
+      .send({ ...farm, type: "FULL", id: "changed_id" });
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toHaveProperty("id", "changed_id");
@@ -122,7 +178,7 @@ describe("Update Farm Integration", () => {
       id: "farm_for_del",
     });
 
-    const pivCreated = await baseRepo.create(DB_TABLES.PIVOTS, {
+    await baseRepo.create(DB_TABLES.PIVOTS, {
       id: `${farm?.id}_1`,
       num: 1,
       farm_id: farm?.id,
@@ -139,12 +195,10 @@ describe("Update Farm Integration", () => {
       ip_gateway: "",
     });
 
-    console.log("Pivot ", pivCreated);
-
     const response = await request(server.getApp())
       .put(`/farms/${farm.id}`)
       .set("Authorization", user?.token)
-      .send({ ...farm, id: "changedId" });
+      .send({ ...farm, type: "FULL", id: "changedId" });
 
     const piv = await baseRepo.findAll(DB_TABLES.PIVOTS);
 

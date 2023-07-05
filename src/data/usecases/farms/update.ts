@@ -1,11 +1,27 @@
-import { IAppLog, IBaseRepository, IIotConnect } from "@contracts/index";
-import { IPutFarmExecute } from "@root/domain/usecases";
 import { FarmModel, PivotModel } from "@root/infra/models";
 import { checkFarmExist } from "./helpers";
 import { MutationFarmVO } from "@root/infra/value-objects";
-
-import { DB_TABLES, INJECTOR_COMMONS, INJECTOR_REPOS } from "@root/shared";
 import { Injector } from "@root/main/injector";
+
+import {
+  IAppLog,
+  IBaseRepository,
+  IBaseUseCases,
+  IIotConnect,
+} from "@contracts/index";
+
+import {
+  IPutFarmExecute,
+  PutFarmAddUser,
+  PutFarmDelUser,
+} from "@root/domain/usecases";
+
+import {
+  DB_TABLES,
+  INJECTOR_CASES,
+  INJECTOR_COMMONS,
+  INJECTOR_REPOS,
+} from "@root/shared";
 
 export class UpdateFarmUseCase {
   #baseRepo: IBaseRepository;
@@ -46,21 +62,16 @@ export class UpdateFarmUseCase {
     }
   }
 
-  execute: IPutFarmExecute = async ({ farm, farm_id, isGateway }) => {
-    this.initInstances();
-
-    this.#console.log(`Atualizando fazenda ${farm_id}`);
-    const exists = await checkFarmExist(farm_id);
-
-    const newFarm = this.createEntity(exists, farm);
+  private async putFull(oldFarm: FarmModel, farm: FarmModel) {
+    const newFarm = this.createEntity(oldFarm, farm);
 
     const updated = await this.#baseRepo.update<FarmModel>(
       DB_TABLES.FARMS,
-      { id: farm_id },
+      { id: oldFarm?.id },
       newFarm
     );
 
-    await this.checkFarmIdEqualsAndPutPivots(farm_id, farm?.id);
+    await this.checkFarmIdEqualsAndPutPivots(oldFarm?.id, farm?.id);
 
     await this.#iot?.publisher(
       `${updated?.id}_0`,
@@ -71,7 +82,38 @@ export class UpdateFarmUseCase {
     );
 
     this.#console.log("Finalizada atualização do usuário");
-
     return updated;
+  }
+
+  private async switchType(
+    oldFarm: FarmModel,
+    farm: PutFarmAddUser | PutFarmAddUser | PutFarmDelUser
+  ) {
+    if (farm?.type === "ADD_WORKER") {
+      const service = Injector.get<IBaseUseCases>(
+        INJECTOR_CASES.FARMS.ADD_USER
+      );
+      return await service.execute(farm);
+    }
+
+    if (farm?.type === "REMOVE_WORKER") {
+      const service = Injector.get<IBaseUseCases>(
+        INJECTOR_CASES.FARMS.DEL_USER
+      );
+
+      return await service.execute(farm);
+    }
+
+    const { type, ...rest } = farm;
+    return await this.putFull(oldFarm, rest as unknown as FarmModel);
+  }
+
+  execute: IPutFarmExecute = async ({ farm, farm_id }) => {
+    this.initInstances();
+
+    this.#console.log(`Atualizando fazenda ${farm_id}`);
+    const exists = await checkFarmExist(farm_id);
+
+    return await this.switchType(exists, farm);
   };
 }

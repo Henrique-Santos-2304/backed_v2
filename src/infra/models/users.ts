@@ -5,7 +5,7 @@ class UserModel {
 
   password: string;
 
-  user_type: "USER" | "SUDO" | "DEALER";
+  user_type: "WORKER" | "SUDO" | "DEALER" | "OWNER";
 
   secret?: string;
 }

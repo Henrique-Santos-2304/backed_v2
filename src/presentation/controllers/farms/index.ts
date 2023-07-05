@@ -2,8 +2,5 @@ export * from "./add-user-into-farm";
 export * from "./create";
 export * from "./delete";
 export * from "./get-all";
-export * from "./get-by-user";
 export * from "./get-one";
-export * from "./get-users-of-farm";
 export * from "./update";
-export * from "./get-all-by-dealer";

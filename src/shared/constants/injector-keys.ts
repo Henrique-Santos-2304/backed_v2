@@ -37,13 +37,9 @@ export const INJECTOR_CASES = {
     CREATE: "case_farm_create",
     DELETE: "case_farm_delete",
     PUT: "case_farm_update",
-    ADD_USER: "case_farm_get_user",
-    GET_BY_USER: "case_farm_get_by_user",
-
-    GET_BY_DEALER: "case_farm_get_by_dealer",
-    GET_USERS: "case_farm_get_users",
+    ADD_USER: "case_farm_add_user",
+    DEL_USER: "case_farm_del_user",
     GET_ONE: "case_farm_get_one",
-
     GET_ALL: "case_farm_get_all",
   },
 
@@ -105,13 +101,7 @@ export const INJECTOR_CONTROLS = {
     CREATE: "control_farm_create",
     DELETE: "control_farm_delete",
     PUT: "control_farm_update",
-    ADD_USER: "control_farm_get_user",
-    GET_BY_USER: "control_farm_get_by_user",
-
-    GET_BY_DEALER: "control_farm_get_by_dealer",
-    GET_USERS: "control_farm_get_users",
     GET_ONE: "control_farm_get_one",
-
     GET_ALL: "control_farm_get_all",
   },
 

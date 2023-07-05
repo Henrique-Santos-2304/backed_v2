@@ -11,9 +11,9 @@ export class AllFarmsController implements IBaseController<FarmModel[]> {
     next
   ) => {
     const callback = async () => {
-      return await Injector.get<IBaseUseCases<void>>(
-        INJECTOR_CASES.FARMS.GET_BY_DEALER
-      ).execute();
+      return await Injector.get<IBaseUseCases<string>>(
+        INJECTOR_CASES.FARMS.GET_ALL
+      ).execute(request.params.id);
     };
     return await controllerAdapter({ response, callback, next });
   };

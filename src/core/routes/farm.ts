@@ -14,10 +14,6 @@ export const farmRoutes = () =>
       authorizeUserForActionMiddleware,
       Injector.get<IBaseController>(INJECTOR_CONTROLS.FARMS.CREATE).handle
     )
-    .post(
-      "/addUserIntoFarm",
-      Injector.get<IBaseController>(INJECTOR_CONTROLS.FARMS.ADD_USER).handle
-    )
     .put(
       "/:id",
       authMiddleware,
@@ -31,23 +27,12 @@ export const farmRoutes = () =>
       Injector.get<IBaseController>(INJECTOR_CONTROLS.FARMS.DELETE).handle
     )
     .get(
-      "/readAll",
+      "/:id",
+      authMiddleware,
       Injector.get<IBaseController>(INJECTOR_CONTROLS.FARMS.GET_ALL).handle
     )
     .get(
-      "/dealers/:id",
-      Injector.get<IBaseController>(INJECTOR_CONTROLS.FARMS.GET_BY_DEALER)
-        .handle
-    )
-    .get(
-      "/farmUser/:id",
-      Injector.get<IBaseController>(INJECTOR_CONTROLS.FARMS.GET_BY_USER).handle
-    )
-    .get(
-      "/getOneFarm/:id",
+      "/by_id/:id",
+      authMiddleware,
       Injector.get<IBaseController>(INJECTOR_CONTROLS.FARMS.GET_ONE).handle
-    )
-    .get(
-      "/usersOfFarms/:id",
-      Injector.get<IBaseController>(INJECTOR_CONTROLS.FARMS.GET_USERS).handle
     );

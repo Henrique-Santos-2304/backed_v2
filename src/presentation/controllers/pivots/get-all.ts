@@ -31,7 +31,7 @@ export class GetAllPivotFullController
   ) => {
     const callback = async () => {
       const service = await Injector.get<IBaseUseCases>(
-        INJECTOR_CASES.PIVOTS.GET_ALL_FULL
+        INJECTOR_CASES.PIVOTS.GET_ALL
       );
       return service?.execute(request.params.id);
     };

@@ -10,6 +10,8 @@ export type DbTables =
   | "farm"
   | "pivot"
   | "state"
+  | "cycle"
+  | "connection"
   | "stateVariable"
   | "radioVariable"
   | "scheduling";
@@ -19,6 +21,8 @@ export type ConstantsType = {
   FARMS: "farm";
   PIVOTS: "pivot";
   STATES: "state";
+  CYCLES: "cycle";
+  CONNECTIONS: "connection";
   STATE_VARIABLES: "stateVariable";
   RADIO_VARIABLES: "radioVariable";
   SCHEDULINGS: "scheduling";

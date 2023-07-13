@@ -1,17 +1,7 @@
-import { CreateStateDto } from "@root/infra";
-import { StateModel } from "@root/infra/models";
 import { Injector } from "@root/main/injector";
-import { INJECTOR_CASES, INJECTOR_COMMONS } from "@root/shared";
+import { INJECTOR_COMMONS } from "@root/shared";
 
-import {
-  IAppLog,
-  IBaseUseCases,
-  ISocketServer,
-  PivotPressureType,
-  StateReceivedType,
-} from "@root/domain";
-import { checkPivotExist } from "../pivots/helpers";
-import { checkFarmExist } from "../farms/helpers";
+import { IAppLog, PivotPressureType } from "@root/domain";
 
 export class CheckPressure {
   #pivotsPressure: PivotPressureType[] = [];
@@ -40,37 +30,13 @@ export class CheckPressure {
     );
   }
 
-  private async createStateAndVariable(
-    pivot_id: string,
-    fail: boolean = true,
-    states?: StateReceivedType
-  ) {
-    const state = await Injector.get<IBaseUseCases<CreateStateDto, StateModel>>(
-      INJECTOR_CASES.STATES.CREATE
-    ).execute({
-      power: fail ? false : states?.power || false,
-      direction: fail ? "CLOCKWISE" : states?.direction || "CLOCKWISE",
-      water: fail ? false : states?.water || false,
-      connection: true,
-      pivot_id,
-    });
-
-    if (!state) return;
-
-    Injector.get<IBaseUseCases>(INJECTOR_CASES.STATE_VARIABLES.CREATE).execute({
-      state_id: state?.state_id,
-      percentimeter: fail ? 0 : states?.percentimeter || 0,
-      angle: fail ? 0 : states?.angle || 0,
-    });
-  }
-
   private async checkAttempts(check: PivotPressureType) {
     if (check.attempts >= 10) {
       this.remove(check?.pivot_id);
       Injector.get<IAppLog>(INJECTOR_COMMONS.APP_LOGS).error(
         `'Erro, nenhuma resposta de pressurização recebido para o pivô '  ${check?.pivot_id}`
       );
-      this.createStateAndVariable(check?.pivot_id);
+      /* this.createStateAndVariable(check?.pivot_id); */
       return;
     }
 
@@ -87,33 +53,11 @@ export class CheckPressure {
     ];
   }
 
-  private async emitSocket(pivot_id: string, angle: string) {
-    const piv = await checkPivotExist(pivot_id);
-    const farm = await checkFarmExist(piv?.farm_id);
-
-    Injector.get<ISocketServer>(INJECTOR_COMMONS.SOCKET).publisher(
-      "pressure-changed",
-      {
-        user_id: farm?.user_id,
-        farm_id: farm?.farm_id,
-        pivot_id,
-        angle: Number(angle) || 0,
-        pressure: true,
-      }
-    );
-  }
-
   async dispatch(toList: string[]) {
-    const [idp, pivot_id, state, percent, angle, _] = toList;
+    const [_, pivot_id, state, ...__] = toList;
 
-    const is_pressure = state[1] === "7";
-    const direction = state[0] === "4" ? "ANTI_CLOCKWISE" : "CLOCKWISE";
     const water = state[1] === "6";
     const power = state[2] === "1";
-
-    if (is_pressure) {
-      return this.emitSocket(pivot_id, angle);
-    }
 
     this.remove(pivot_id);
 
@@ -121,13 +65,6 @@ export class CheckPressure {
       Injector.get<IAppLog>(INJECTOR_COMMONS.APP_LOGS).log(
         `Pressurização do pivô ${pivot_id} finalizada com sucesso `
       );
-      return this.createStateAndVariable(pivot_id, false, {
-        direction,
-        water,
-        power,
-        percentimeter: Number(percent),
-        angle: Number(angle),
-      });
     }
 
     if (!power) {
@@ -136,7 +73,7 @@ export class CheckPressure {
       );
     }
 
-    return await this.createStateAndVariable(pivot_id);
+    return;
   }
 
   async execute(states: string[]) {

@@ -1,6 +1,5 @@
 import { IBaseController, IBaseUseCases } from "@contracts/bases";
 import { GetPivotFullResponse } from "@root/domain/usecases";
-import { PivotModel } from "@root/infra/models";
 import { controllerAdapter } from "@root/main/adapters";
 import { Injector } from "@root/main/injector";
 import { INJECTOR_CASES } from "@root/shared";
@@ -15,7 +14,7 @@ export class GetPivotFullController
   ) => {
     const callback = async () => {
       return await Injector.get<IBaseUseCases>(
-        INJECTOR_CASES.PIVOTS.GET_FULL
+        INJECTOR_CASES.PIVOTS.GET_ONE
       ).execute(request.params.id);
     };
 

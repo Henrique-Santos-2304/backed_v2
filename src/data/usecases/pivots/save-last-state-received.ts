@@ -1,30 +1,35 @@
+import { PivotModel } from "@root/infra/models";
+import { Injector } from "@root/main/injector";
+import { checkFarmExist } from "../farms/helpers";
+import { checkPivotExist } from "./helpers/check-pivots";
+
 import {
+  DB_TABLES,
+  IDPS,
+  INJECTOR_CASES,
+  INJECTOR_COMMONS,
+  INJECTOR_REPOS,
+  splitMsgCloud,
+} from "@root/shared";
+
+import {
+  IAppDate,
   IAppLog,
   IBaseRepository,
   IBaseUseCases,
   IIotConnect,
   ISocketServer,
-  ReturnLastStateProps,
 } from "@root/domain";
 import {
   GetPivotFullResponse,
   IStateReceivedPivotExecute,
 } from "@root/domain/usecases";
-import { PivotModel } from "@root/infra/models";
-import { checkPivotExist } from "./helpers/check-pivots";
-import {
-  DB_TABLES,
-  INJECTOR_CASES,
-  INJECTOR_COMMONS,
-  INJECTOR_REPOS,
-} from "@root/shared";
-import { Injector } from "@root/main/injector";
-import { checkFarmExist } from "../farms/helpers";
 
 export class SaveLastStatePivotUseCase {
   #baseRepo: IBaseRepository;
   #console: IAppLog;
   #iot: IIotConnect;
+  #date: IAppDate;
   #socketEmit: ISocketServer;
   #gePivotFull: IBaseUseCases<string, GetPivotFullResponse>;
 
@@ -34,57 +39,60 @@ export class SaveLastStatePivotUseCase {
 
     this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
     this.#socketEmit = Injector.get(INJECTOR_COMMONS.SOCKET);
+    this.#date = Injector.get(INJECTOR_COMMONS.APP_DATE);
 
-    this.#gePivotFull = Injector.get(INJECTOR_CASES.PIVOTS.GET_FULL);
+    this.#gePivotFull = Injector.get(INJECTOR_CASES.PIVOTS.GET_ONE);
   }
 
-  private async sendEmitter(pivot_id: string) {
-    const stateFull = await this.#gePivotFull.execute(pivot_id);
-    const farm = await checkFarmExist(stateFull.pivot.farm_id);
+  private alterPowerForOn(oldState: string, newState: String) {
+    const oldList = splitMsgCloud(oldState);
+    const state = oldList.toList[2];
 
-    const objSendStatus = {
-      users: [farm.user_id, farm.dealer, ...(farm?.users || "")],
-      ...stateFull,
-    };
-
-    this.#socketEmit.publisher(`${farm?.user_id}-status`, stateFull);
+    return state[2] === "2" && newState[2] === "1";
   }
 
-  private splitMessage(payload: string) {
-    const arrayMessage = payload.split("-");
+  private async sendEmitter(pivot: PivotModel) {
+    const farm = await checkFarmExist(pivot?.farm_id);
 
-    if (arrayMessage.length !== 6)
-      throw new Error("Formato de mensagem invalido");
-
-    const pivot_id = arrayMessage[1];
-    const message = payload.split(`${pivot_id}-`)[1];
-
-    return { pivot_id, message };
+    this.#socketEmit.publisher(`${farm?.owner}-status`, pivot?.last_state);
   }
 
-  private async putPivot(pivot_id: string, message: string) {
-    await this.#baseRepo.update<Partial<PivotModel>>(
+  private async putPivot(
+    message: string[],
+    oldAngle: number,
+    alterPowerOn: boolean
+  ) {
+    const [_, id, state, percent, angle, __] = message;
+    const init_angle = alterPowerOn ? angle : oldAngle;
+
+    return await this.#baseRepo.update<any>(
       DB_TABLES.PIVOTS,
-      { pivot_id },
+      { id },
       {
-        last_state: message,
+        last_state: `#${
+          IDPS.STATUS
+        }-${id}-${state}-${init_angle}-${angle}-${this.#date.dateSpString()}$`,
         last_timestamp: new Date(),
-        last_angle: Number(message.split("-")[2]),
+        init_angle: Number(init_angle),
       }
     );
   }
 
   execute: IStateReceivedPivotExecute = async ({ payload }) => {
     this.initInstances();
+    const [_, id, state, ...__] = payload;
+    this.#console.log(`Recebido Status ${payload.join("-")} para pivô ${id}`);
 
-    const { pivot_id, message } = this.splitMessage(payload);
+    const oldPivot = await checkPivotExist(id);
+    const alterPower = this.alterPowerForOn(oldPivot?.last_state, state);
 
-    this.#console.log(`Recebido Status ${message} para pivo  ${pivot_id}`);
+    const piv: PivotModel = await this.putPivot(
+      payload,
+      oldPivot?.init_angle,
+      alterPower
+    );
 
-    const oldPivot = await checkPivotExist(pivot_id);
-
-    await this.putPivot(pivot_id, message);
-    await this.sendEmitter(pivot_id);
+    await this.sendEmitter(piv);
 
     if (!oldPivot?.is_gprs) {
       await this.#iot.publisher(`${oldPivot?.farm_id}_0`, `#${payload}$`);

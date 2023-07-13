@@ -15,7 +15,7 @@ export class CheckPivotsInterval {
       is_gprs: true,
     });
 
-    pivots.forEach((piv) => usecase.execute(piv?.pivot_id));
+    pivots.forEach((piv) => usecase.execute(piv?.id));
   }
 
   static start() {

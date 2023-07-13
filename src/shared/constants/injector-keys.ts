@@ -50,9 +50,7 @@ export const INJECTOR_CASES = {
     SAVE_LAST_STATE: "case_pivot_save_last_state",
     SAVE_CONNECTION_FALSE: "case_pivot_save_conn_false",
 
-    GET_FULL: "case_pivot_get_full",
-    GET_ALL_FULL: "case_pivot_get_all_full",
-
+    GET_ONE: "case_pivot_one",
     GET_ALL: "case_pivot_get_all",
   },
 
@@ -111,9 +109,7 @@ export const INJECTOR_CONTROLS = {
     PUT: "control_pivot_update",
     SAVE_LAST_STATE: "control_pivot_save_last_state",
 
-    GET_FULL: "control_pivot_get_full",
-    GET_ALL_FULL: "control_pivot_get_all_full",
-
+    GET_ONE: "control_pivot_one",
     GET_ALL: "control_pivot_get_all",
   },
 

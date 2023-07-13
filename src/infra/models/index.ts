@@ -5,3 +5,5 @@ export * from "./scheduling";
 export * from "./state";
 export * from "./state-variables";
 export * from "./users";
+export * from "./cycle";
+export * from "./connection";

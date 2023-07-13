@@ -1,21 +1,10 @@
-class StateModel {
-  state_id: string;
-
+export class StateModel {
+  id: string;
   pivot_id: string;
-
-  author?: string;
-
-  connection: boolean;
-
-  power: boolean;
-
-  water: boolean;
-
-  start_angle?: number | null;
-
-  direction: "CLOCKWISE" | "ANTI_CLOCKWISE";
-
+  start_date: Date;
+  end_date?: Date;
+  is_off: boolean;
+  status: string;
+  end_variable: string;
   timestamp: Date;
 }
-
-export { StateModel };

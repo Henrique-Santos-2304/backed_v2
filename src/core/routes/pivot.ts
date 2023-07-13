@@ -9,36 +9,30 @@ export const pivotRoutes = () =>
   express
     .Router()
     .post(
-      "/addPivot",
+      "/",
       authMiddleware,
       authorizeUserForActionMiddleware,
       Injector.get<IBaseController>(INJECTOR_CONTROLS.PIVOTS.CREATE).handle
     )
     .put(
-      "/putPivot",
+      "/",
       authMiddleware,
       authorizeUserForActionMiddleware,
       Injector.get<IBaseController>(INJECTOR_CONTROLS.PIVOTS.PUT).handle
     )
     .delete(
-      "/deletePivot/:id",
+      "/:id",
       authMiddleware,
       authorizeUserForActionMiddleware,
       Injector.get<IBaseController>(INJECTOR_CONTROLS.PIVOTS.DELETE).handle
     )
     .get(
-      "/getPivots/:id",
+      "/:id",
       authMiddleware,
       Injector.get<IBaseController>(INJECTOR_CONTROLS.PIVOTS.GET_ALL).handle
     )
     .get(
-      "/:id",
+      "/by_id/:id",
       authMiddleware,
-      Injector.get<IBaseController>(INJECTOR_CONTROLS.PIVOTS.GET_ALL_FULL)
-        .handle
-    )
-    .get(
-      "one/:id",
-      authMiddleware,
-      Injector.get<IBaseController>(INJECTOR_CONTROLS.PIVOTS.GET_FULL).handle
+      Injector.get<IBaseController>(INJECTOR_CONTROLS.PIVOTS.GET_ONE).handle
     );

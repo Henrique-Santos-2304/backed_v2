@@ -2,7 +2,7 @@ import { server } from "@root/app";
 import { IBaseRepository } from "@root/domain";
 import { FarmModel, UserModel } from "@root/infra/models";
 import { Injector } from "@root/main/injector";
-import { DB_TABLES, INJECTOR_REPOS } from "@root/shared";
+import { DB_TABLES, IDPS, INJECTOR_REPOS } from "@root/shared";
 import request from "supertest";
 
 describe("Update Farm Integration", () => {
@@ -184,13 +184,14 @@ describe("Update Farm Integration", () => {
       farm_id: farm?.id,
       latitude: -22,
       longitude: -44,
-      last_state: `#0-${
+      last_state: `#${IDPS.STATUS}-${
         farm?.id
       }_1-000-000-000-000-${new Date().toISOString()}`,
       last_timestamp: new Date(),
       start_angle: 0,
       end_angle: 360,
       radius: 360,
+      init_angle: 0,
       is_gprs: true,
       ip_gateway: "",
     });

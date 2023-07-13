@@ -5,6 +5,8 @@ export const DB_TABLES: ConstantsType = {
   FARMS: "farm",
   PIVOTS: "pivot",
   STATES: "state",
+  CYCLES: "cycle",
+  CONNECTIONS: "connection",
   STATE_VARIABLES: "stateVariable",
   RADIO_VARIABLES: "radioVariable",
   SCHEDULINGS: "scheduling",

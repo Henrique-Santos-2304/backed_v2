@@ -15,18 +15,18 @@ export class DeletePivotUseCase {
     this.#iot = Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
   }
 
-  execute: IDelPivotExecute = async ({ pivot_id, isGateway }) => {
+  execute: IDelPivotExecute = async ({ id, isGateway }) => {
     this.initInstances();
 
-    this.#console.log(`Deletando pivô ${pivot_id}`);
+    this.#console.log(`Deletando pivô ${id}`);
 
-    const { farm_id } = await checkPivotExist(pivot_id);
+    const { farm_id } = await checkPivotExist(id);
 
-    await this.#baseRepo.delete(DB_TABLES.PIVOTS, { pivot_id });
+    await this.#baseRepo.delete(DB_TABLES.PIVOTS, { id });
 
     if (!isGateway) return;
 
-    await this.#iot?.publisher(`${farm_id}_0`, `#2002:D-${pivot_id}`);
+    await this.#iot?.publisher(`${farm_id}_0`, `#2002:D-${id}`);
     this.#console.log(`Pivô deletado com sucesso`);
   };
 }

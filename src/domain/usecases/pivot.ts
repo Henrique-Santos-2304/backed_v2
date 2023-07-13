@@ -20,12 +20,17 @@ export type IPutPivotExecute = IBaseUseCases<
 >["execute"];
 
 export type IStateReceivedPivotExecute = IBaseUseCases<
-  { payload: string } & IIsGateway,
+  { payload: string[] } & IIsGateway,
+  void
+>["execute"];
+
+export type ISaveConnectionFalsePivotExecute = IBaseUseCases<
+  { id: string } & IIsGateway,
   void
 >["execute"];
 
 export type IDelPivotExecute = IBaseUseCases<
-  { pivot_id: string } & IIsGateway,
+  { id: string } & IIsGateway,
   void
 >["execute"];
 export type IGetOnePivot = IBaseUseCases<string, PivotModel>["execute"];
@@ -34,7 +39,7 @@ export type IGetPivotFull = IBaseUseCases<
   string,
   GetPivotFullResponse
 >["execute"];
-export type IGetAllPivotFull = IBaseUseCases<
+export type IGetAllPivot = IBaseUseCases<
   string,
   GetPivotFullResponse[]
 >["execute"];

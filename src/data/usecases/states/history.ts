@@ -1,5 +1,5 @@
 import { IAppDate, IBaseRepository, IBaseUseCases } from "@root/domain";
-import { IStateRepo, IStateVariableRepo } from "@root/domain/repos";
+import { IStateVariableRepo } from "@root/domain/repos";
 
 import { StateModel } from "@root/infra/models";
 import { Injector } from "@root/main/injector";
@@ -8,8 +8,6 @@ import {
   IGetStateHistoryExec,
   PartialCycleResponse,
 } from "@root/domain/usecases";
-import { prisma } from "@root/core";
-import { State } from "@prisma/client";
 
 const initialCycle = {
   states: [],
@@ -139,7 +137,6 @@ export class GetHistoryStateOfPivot implements IBaseUseCases {
 
     const states = (await this.#baseRepo.findAllByData(DB_TABLES.STATES, {
       pivot_id,
-      connection: true,
       timestamp: { gte: startDate, lt: endDate },
     })) as unknown as StateModel[];
 

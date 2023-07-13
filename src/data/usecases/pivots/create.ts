@@ -2,6 +2,7 @@ import { checkPivotExist } from "./helpers/check-pivots";
 import { checkFarmExist } from "../farms/helpers";
 
 import {
+  IAppDate,
   IAppLog,
   IBaseRepository,
   IBaseUseCases,
@@ -19,26 +20,19 @@ export class CreatePivotUseCase implements IBaseUseCases {
   #baseRepo: IBaseRepository;
   #console: IAppLog;
   #iot: IIotConnect;
+  #date: IAppDate;
 
   private initInstances() {
     this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
     this.#console = Injector.get(INJECTOR_COMMONS.APP_LOGS);
     this.#iot = Injector.get(INJECTOR_COMMONS.IOT_CONFIG);
+    this.#date = Injector.get(INJECTOR_COMMONS.APP_DATE);
   }
 
   private createEntity(pivot: CreatePivotDto) {
     const vo = new MutationPivotVO();
 
-    return vo.create(pivot).find();
-  }
-
-  private mountSyncForGateway(pivot: PivotModel) {
-    let pivotString = "";
-
-    for (let [key, value] of Object.entries(pivot)) {
-      pivotString += `-${key}::${value}`;
-    }
-    return "#" + `2002:C${pivotString}$`;
+    return vo.create(this.#date, pivot).find();
   }
 
   execute: ICreatePivotExecute = async ({ pivot, isGateway }) => {
@@ -46,7 +40,7 @@ export class CreatePivotUseCase implements IBaseUseCases {
 
     this.#console.log(`Criando novo Pivô para fazenda ${pivot?.farm_id}`);
     await Promise.all([
-      checkPivotExist(`${pivot?.farm_id}_${pivot?.pivot_num}`, false),
+      checkPivotExist(`${pivot?.farm_id}_${pivot?.num}`, false),
       checkFarmExist(pivot?.farm_id),
     ]);
 
@@ -60,7 +54,10 @@ export class CreatePivotUseCase implements IBaseUseCases {
     if (isGateway) {
       await this.#iot?.publisher(
         `${pivot?.farm_id}_0`,
-        this.mountSyncForGateway(newPivot)
+        JSON.stringify({
+          type: "ADD_PIVOT",
+          entity,
+        })
       );
     }
 

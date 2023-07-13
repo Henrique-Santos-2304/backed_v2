@@ -46,7 +46,8 @@ export class AppDate implements IAppDate {
   }
 
   dateSpString() {
-    return this.#instance().format(this.#format);
+    const dateString = this.#instance().format(this.#format);
+    return dateString.replace(" ", " ás ");
   }
 
   dateNow() {
@@ -54,7 +55,10 @@ export class AppDate implements IAppDate {
   }
 
   toDateSpString(date: Date) {
-    return this.#instance(date).tz(this.#timezone).format(this.#format);
+    const dateString = this.#instance(date)
+      .tz(this.#timezone)
+      .format(this.#format);
+    return dateString.replace(" ", " ás ");
   }
 
   catchDiff(date: Date | null) {

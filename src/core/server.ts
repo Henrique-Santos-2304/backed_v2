@@ -43,13 +43,12 @@ export class AppServer implements IAppServer {
     Injector.get<IAppLog>(INJECTOR_COMMONS.APP_LOGS).warn(
       `-----Bem vindo a SOIL-----\n`
     );
-    prisma.user.findMany().then((_) => console.log(JSON.stringify(_)));
 
     Injector.get<ISocketServer>(INJECTOR_COMMONS.SOCKET).start(
       this.#httpServer
     );
     this.#httpServer.listen(3308, async () => {
-      Injector.get<IIotConnect>(INJECTOR_COMMONS.IOT_CONFIG)?.start();
+      //Injector.get<IIotConnect>(INJECTOR_COMMONS.IOT_CONFIG)?.start();
     });
   }
 

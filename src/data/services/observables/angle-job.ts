@@ -44,7 +44,7 @@ export class AngleJobObservable implements IObservables {
   }) => {
     const baseRepo = Injector.get<IBaseRepository>(INJECTOR_REPOS.BASE);
     const piv = await baseRepo.findOne<PivotModel>(DB_TABLES.PIVOTS, {
-      pivot_id,
+      id: pivot_id,
     });
 
     this.#schedules = [
@@ -52,7 +52,7 @@ export class AngleJobObservable implements IObservables {
       {
         pivot_id,
         requiredAngle,
-        type: piv?.last_angle > requiredAngle ? "desc" : "cresc",
+        type: piv?.init_angle > requiredAngle ? "desc" : "cresc",
         cb,
       },
     ];

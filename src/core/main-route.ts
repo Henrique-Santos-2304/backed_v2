@@ -32,10 +32,13 @@ export const expressRouters = () =>
     .use("/users", userRoutes())
     .use("/farms", farmRoutes())
     .use("/pivots", pivotRoutes())
-    .use("/cycles", cyclesRoutes())
+    .get("api-status", (req, res) => {
+      res.sendStatus(200);
+    });
+/*     .use("/cycles", cyclesRoutes())
     .use("/radio_variables", radioVariablesRoutes())
     .use("/schedulings", schedulingsRoutes())
-    .use("/actions", actionsRoutes());
+    .use("/actions", actionsRoutes()); */
 
 /*
 router.use('/states', stateRoute);

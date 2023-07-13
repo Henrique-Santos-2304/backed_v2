@@ -10,10 +10,10 @@ export class MutationStateVO {
   }
 
   create(uuidGenerator: IHashId, state: CreateStateDto) {
-    this.#state.state_id = uuidGenerator.generate();
+    this.#state.id = uuidGenerator.generate();
     this.#state = { ...this.#state, ...state };
+    this.#state.start_date = new Date();
     this.#state.timestamp = new Date();
-    this.#state.connection = state.connection || true;
 
     return this;
   }

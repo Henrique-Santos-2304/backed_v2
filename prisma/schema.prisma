@@ -8,14 +8,13 @@ datasource db {
   shadowDatabaseUrl = env("SHADOW_URL")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 enum UserType {
   SUDO
   WORKER
   DEALER
   OWNER
 }
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+
 model User {
   id           String        @id @db.Uuid
   username     String        @unique @db.VarChar(255)
@@ -46,25 +45,64 @@ model Farm {
 }
 
 model Pivot {
-  id                String        @id @unique @db.VarChar(255)
+  id                String     @id @unique @db.VarChar(255)
   farm_id           String        
-  num               Int       
-  last_state        String   @default("#0-id-000-000-000-000-date")
-  last_timestamp    DateTime   @db.Timestamp()
+  num               Int  
 
-  latitude          Int
-  longitude         Int
+  last_state        String     @default("#0-id-000-000-000-000-date")
+  last_timestamp    DateTime   @db.Timestamp()
+  init_angle        Float
+
+  latitude          Float
+  longitude         Float
 
   start_angle       Float
   end_angle         Float          
   radius            Float
   is_gprs           Boolean
-  ip_gateway        String
+  ip_gateway        String?
 
   farm              Farm    @relation(fields: [farm_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  states            State[]
+  connections       Connection[]
 
   @@map("pivots")
 }
 
+model State { 
+  id           String        @id @db.Uuid
+  pivot_id     String 
+  start_date   DateTime
+  end_date     DateTime?
+  is_off       Boolean
+  status       String        @db.VarChar(255)
+  start_variable String
+  timestamp    DateTime
+
+  pivot        Pivot         @relation(fields: [pivot_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  cycles       Cycle[]
+ @@map("states")
+}
+
+model Cycle {
+  id           String        @id @db.Uuid
+  state_id     String        @db.Uuid
+  status       String        @db.VarChar(255)
+  timestamp    DateTime
+
+  state        State         @relation(fields: [state_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  @@map("cycles")
+}
+
+model Connection {
+  id           String        @id @db.Uuid
+  pivot_id     String 
+  loss_date DateTime
+  recovery_date  DateTime?
+  timestamp  DateTime
+
+  pivot        Pivot         @relation(fields: [pivot_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  @@map("connections")
+}
 
 

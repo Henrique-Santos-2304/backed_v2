@@ -1,16 +1,14 @@
-import { IAppLog, IObservables, StatusObservablesType } from "@root/domain";
-import { Injector } from "@root/main/injector";
-import { INJECTOR_COMMONS } from "@root/shared";
+import { IObservables, StatusObservablesType } from "@root/domain";
 
 export class StatusObservable implements IObservables {
   #observers: Array<StatusObservablesType> = [] as StatusObservablesType[];
 
-  private check(pivot_id: string) {
-    return this.#observers.find((sub) => sub?.pivot?.pivot_id === pivot_id);
+  private check(id: string) {
+    return this.#observers.find((sub) => sub?.pivot?.id === id);
   }
 
   subscribe(sub: StatusObservablesType) {
-    const exist = this.check(sub?.pivot.pivot_id);
+    const exist = this.check(sub?.pivot.id);
     if (exist) return;
 
     this.#observers.push(sub);
@@ -20,16 +18,16 @@ export class StatusObservable implements IObservables {
 
   unsubscribe(follow: string) {
     this.#observers = this.#observers.filter(
-      (sub) => sub?.pivot?.pivot_id !== follow
+      (sub) => sub?.pivot?.id !== follow
     );
   }
 
   private checkListener(stub: StatusObservablesType) {
-    const actualList = this.check(stub?.pivot?.pivot_id);
+    const actualList = this.check(stub?.pivot?.id);
     if (!actualList) return;
 
     if (stub?.attempts >= 3) {
-      this.unsubscribe(stub?.pivot?.pivot_id);
+      this.unsubscribe(stub?.pivot?.id);
       stub?.cbFail(stub?.pivot);
       return;
     }

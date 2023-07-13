@@ -1,22 +1,26 @@
+import { CheckPressure } from "../states";
+import { Injector } from "@root/main/injector";
+import { checkPivotExist } from "../pivots/helpers";
 import {
-  IAppLog,
+  ConnectionModel,
+  StateModel,
+  StateVariableModel,
+} from "@root/infra/models";
+import { getLastStateFull } from "../states/helpers/get-state";
+import {
   IBaseRepository,
   IBaseUseCases,
-  IIotConnect,
   IObservables,
   IWriteLogs,
 } from "@root/domain";
-import { StateModel, StateVariableModel } from "@root/infra/models";
-import { Injector } from "@root/main/injector";
+
 import {
+  DB_TABLES,
   INJECTOR_CASES,
   INJECTOR_COMMONS,
   INJECTOR_OBSERVABLES,
   INJECTOR_REPOS,
 } from "@root/shared";
-import { getLastStateFull } from "../states/helpers/get-state";
-import { checkPivotExist } from "../pivots/helpers";
-import { CheckPressure } from "../states";
 
 export class ReceveidStatus implements IBaseUseCases {
   #checkPresure: CheckPressure;
@@ -40,22 +44,13 @@ export class ReceveidStatus implements IBaseUseCases {
     this.#angleObserver = Injector.get(INJECTOR_OBSERVABLES.ANGLE_JOB);
   }
 
-  private async saveLasteState(payload: string) {
-    await this.#saveLastState?.execute({ payload, isGateway: false });
-  }
-
   private async createState(
-    pivot_id: string,
-    state: string,
+    state: string[],
     author: string | null
   ): Promise<StateModel> {
     return await this.#createState.execute({
-      pivot_id,
       author,
-      connection: true,
-      power: state[2] === "1",
-      water: state[1] === "6",
-      direction: state[0] === "3" ? "CLOCKWISE" : "ANTI_CLOCKWISE",
+      message: state,
     });
   }
 
@@ -80,16 +75,27 @@ export class ReceveidStatus implements IBaseUseCases {
 
     const is_pressure = state[1] === "7";
 
-    if (!exists && !is_pressure) return;
-    if (exists && is_pressure) return true;
+    if ((!is_pressure && !exists) || (exists && is_pressure)) return;
 
-    const isFinalPressure = exists && !is_pressure;
-
-    isFinalPressure
+    exists && !is_pressure
       ? this.#checkPresure.dispatch(payload)
       : this.#checkPresure.execute(payload);
+  }
 
-    return true;
+  private async checkConnection(pivot_id: string) {
+    const baseRepo = Injector.get<IBaseRepository>(INJECTOR_REPOS.BASE);
+    const alreadyExists = await baseRepo.findLast<ConnectionModel>(
+      DB_TABLES.CONNECTIONS,
+      { pivot_id }
+    );
+
+    if (!alreadyExists || alreadyExists?.recovery_date) return;
+
+    await baseRepo.update<Partial<ConnectionModel>>(
+      DB_TABLES.CONNECTIONS,
+      { id: alreadyExists.id },
+      { recovery_date: new Date() }
+    );
   }
 
   async execute(payload: string[]) {
@@ -104,26 +110,22 @@ export class ReceveidStatus implements IBaseUseCases {
     );
 
     await checkPivotExist(pivot_id);
+    await this.#saveLastState?.execute({ payload, isGateway: false });
+    await this.checkConnection(pivot_id);
 
-    const inPressure = await this.checkPivotInPressure(
-      pivot_id,
-      state,
-      payload
-    );
+    await this.checkPivotInPressure(pivot_id, state, payload);
 
-    if (inPressure) return;
+    if (state[1] === "7") return;
 
     this.#angleObserver.dispatch(pivot_id, Number(angle));
     const author = await this.#actionObserver.dispatch(pivot_id);
 
-    await this.saveLasteState(payload.join("-"));
-
     const newState =
-      (await this.createState(pivot_id, state, author || null)) ||
+      (await this.createState(payload, author || null)) ||
       (await getLastStateFull(pivot_id));
 
-    if (!newState?.state_id) return;
+    if (!newState?.id) return;
 
-    await this.createVariable(newState?.state_id, percent, angle);
+    await this.createVariable(newState?.id, percent, angle);
   }
 }

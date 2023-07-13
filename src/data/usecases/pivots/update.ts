@@ -21,31 +21,23 @@ export class UpdatePivotUseCase {
     return vo.update(oldData, newDate).find();
   }
 
-  mountData(pivot: PivotModel) {
-    let data = "#2002:P";
-
-    for (let [key, value] of Object.entries(pivot)) {
-      data += `-${key}::${value}`;
-    }
-
-    return `${data}$`;
-  }
-
   execute: IPutPivotExecute = async ({ pivot, isGateway }) => {
     this.initInstances();
 
-    this.#console.log(`Iniciando atualização do pivô ${pivot?.pivot_id}`);
-    const oldPivot = await checkPivotExist(pivot?.pivot_id);
+    this.#console.log(`Iniciando atualização do pivô ${pivot?.id}`);
+    const oldPivot = await checkPivotExist(pivot?.id);
     const newPivot = this.createEntity(oldPivot, pivot);
 
-    await this.#baseRepo.update(
-      DB_TABLES.PIVOTS,
-      { pivot_id: pivot?.pivot_id },
-      newPivot
-    );
+    await this.#baseRepo.update(DB_TABLES.PIVOTS, { id: pivot?.id }, newPivot);
 
     if (isGateway) {
-      await this.#iot?.publisher(`${pivot?.farm_id}_0`, this.mountData(pivot));
+      await this.#iot?.publisher(
+        `${pivot?.farm_id}_0`,
+        JSON.stringify({
+          type: "PUT_PIVOT",
+          newPivot,
+        })
+      );
     }
 
     this.#console.log("Atualização finalizada com sucesso... \n");

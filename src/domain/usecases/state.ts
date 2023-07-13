@@ -36,7 +36,8 @@ export type ActionProps = {
   percentimeter: boolean;
   author: string;
 };
+
 export type ICreateActionExecute = IBaseUseCases<
-  { action: ActionProps } & IIsGateway,
+  { action: string } & IIsGateway,
   void
 >["execute"];

@@ -5,7 +5,6 @@ import {
   CreatePivotController,
   DelPivotController,
   GetAllPivotController,
-  GetAllPivotFullController,
   GetPivotFullController,
   UpdatePivotController,
 } from "@root/presentation";
@@ -16,9 +15,5 @@ export const injectPivotsControls = async () => {
   Injector.add(new UpdatePivotController(), INJECTOR_CONTROLS.PIVOTS.PUT);
 
   Injector.add(new GetAllPivotController(), INJECTOR_CONTROLS.PIVOTS.GET_ALL);
-  Injector.add(new GetPivotFullController(), INJECTOR_CONTROLS.PIVOTS.GET_FULL);
-  Injector.add(
-    new GetAllPivotFullController(),
-    INJECTOR_CONTROLS.PIVOTS.GET_ALL_FULL
-  );
+  Injector.add(new GetPivotFullController(), INJECTOR_CONTROLS.PIVOTS.GET_ONE);
 };

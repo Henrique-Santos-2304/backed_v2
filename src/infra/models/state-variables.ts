@@ -1,5 +1,5 @@
-class StateVariableModel {
-  state_variable_id: string;
+export class StateVariableModel {
+  id: string;
 
   state_id: string;
 
@@ -9,5 +9,3 @@ class StateVariableModel {
 
   timestamp: Date;
 }
-
-export { StateVariableModel };

@@ -62,16 +62,14 @@ export class SaveLastStatePivotUseCase {
     oldAngle: number,
     alterPowerOn: boolean
   ) {
-    const [_, id, state, percent, angle, __] = message;
-    const init_angle = alterPowerOn ? angle : oldAngle;
+    message[6] = this.#date.dateSpString();
+    const init_angle = alterPowerOn ? message[5] : message[4];
 
     return await this.#baseRepo.update<any>(
       DB_TABLES.PIVOTS,
-      { id },
+      { id: message[1] },
       {
-        last_state: `#${
-          IDPS.STATUS
-        }-${id}-${state}-${init_angle}-${angle}-${this.#date.dateSpString()}$`,
+        last_state: `#${message.join("-")}$`,
         last_timestamp: new Date(),
         init_angle: Number(init_angle),
       }

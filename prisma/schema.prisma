@@ -81,7 +81,8 @@ model State {
 
   pivot        Pivot         @relation(fields: [pivot_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   cycles       Cycle[]
- @@map("states")
+  variables    StateVariable[]
+  @@map("states")
 }
 
 model Cycle {
@@ -103,6 +104,17 @@ model Connection {
 
   pivot        Pivot         @relation(fields: [pivot_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   @@map("connections")
+}
+
+model StateVariable { 
+  id           String        @id @db.Uuid
+  state_id     String        @db.Uuid
+  percentimeter   Float
+  angle     Float
+  timestamp    DateTime
+
+  state        State         @relation(fields: [state_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  @@map("state_variables")
 }
 
 

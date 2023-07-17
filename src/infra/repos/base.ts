@@ -23,8 +23,8 @@ export class BaseRepository implements IBaseRepository {
       (this.#prisma[DB_TABLES.PIVOTS] = prisma.pivot),
       (this.#prisma[DB_TABLES.STATES] = prisma.state),
       (this.#prisma[DB_TABLES.STATE_VARIABLES] = prisma.stateVariable),
-      (this.#prisma[DB_TABLES.RADIO_VARIABLES] = prisma.radioVariable),
-      (this.#prisma[DB_TABLES.SCHEDULINGS] = prisma.scheduling);
+      (this.#prisma[DB_TABLES.CYCLES] = prisma.cycle),
+      (this.#prisma[DB_TABLES.CONNECTIONS] = prisma.connection);
   }
 
   async create<P = any>(model: DbTables, data: P): Promise<P> {

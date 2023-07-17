@@ -1,7 +1,8 @@
 import { IBaseUseCases, IWriteLogs, SendMessageSignalType } from "@root/domain";
+import { CreateStateDto } from "@root/infra";
 import { StateModel } from "@root/infra/models";
 import { Injector } from "@root/main/injector";
-import { INJECTOR_COMMONS } from "@root/shared";
+import { INJECTOR_COMMONS, splitMsgCloud } from "@root/shared";
 import https from "https";
 
 export class SendMessagesSignal implements IBaseUseCases {
@@ -43,21 +44,28 @@ export class SendMessagesSignal implements IBaseUseCases {
     }
   }
 
-  async mount_message(farm_id: string, state: Partial<StateModel>) {
+  async mount_message(farm_id: string, state: CreateStateDto) {
     const pivot_id = state?.pivot_id?.split("_");
 
     const num = pivot_id ? pivot_id[pivot_id.length - 1] : 0;
-    const power = state?.power ? "Ligado" : "Desligado";
-    const water = state?.water ? "Irrigando" : " Seco";
 
-    const direction =
-      state?.direction === "ANTI_CLOCKWISE" ? "Reverso" : "Avanço";
+    const { toList } = splitMsgCloud(state?.status);
+    const power = toList[2][2] === "1" ? "Ligado" : "Desligado";
+    const water =
+      toList[2][1] === "6"
+        ? "Pressurizando"
+        : toList[2][1] === "6"
+        ? "Irrigando"
+        : " Seco";
+
+    const direction = toList[0] === "3" ? "Reverso" : "Avanço";
 
     const message = {
       farm: `Fazenda ${farm_id?.toUpperCase()}`,
-      message: state?.power
-        ? `Pivô ${num} ${power} - ${water} - ${direction}`
-        : `Pivô ${num} Desligado`,
+      message:
+        toList[2][2] === "1"
+          ? `Pivô ${num} ${power} - ${water} - ${direction}`
+          : `Pivô ${num} Desligado`,
     };
 
     /*  await writeLog.write(

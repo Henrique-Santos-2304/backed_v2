@@ -20,6 +20,14 @@ export class NewCloudMessages {
   static async start(message: ArrayBuffer) {
     const { toList, idp } = splitMsgCloud(message.toString());
 
+    console.log("--------------------------------------");
+    console.log("--------------------------------------");
+    console.log("--------------------------------------");
+    console.log("--------------------------------------");
+    console.log("--------------------------------------");
+    console.log(toList);
+    console.log("Len ", toList.length);
+    console.log(message.toString());
     if (idp === IDPS.GET_INITIAL_DATA) {
       if (NewCloudMessages.formatMessage(toList.length, 2)) return;
 

@@ -81,6 +81,17 @@ CREATE TABLE "connections" (
     CONSTRAINT "connections_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "state_variables" (
+    "id" UUID NOT NULL,
+    "state_id" UUID NOT NULL,
+    "percentimeter" DOUBLE PRECISION NOT NULL,
+    "angle" DOUBLE PRECISION NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "state_variables_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
 
@@ -104,3 +115,6 @@ ALTER TABLE "cycles" ADD CONSTRAINT "cycles_state_id_fkey" FOREIGN KEY ("state_i
 
 -- AddForeignKey
 ALTER TABLE "connections" ADD CONSTRAINT "connections_pivot_id_fkey" FOREIGN KEY ("pivot_id") REFERENCES "pivots"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "state_variables" ADD CONSTRAINT "state_variables_state_id_fkey" FOREIGN KEY ("state_id") REFERENCES "states"("id") ON DELETE CASCADE ON UPDATE CASCADE;

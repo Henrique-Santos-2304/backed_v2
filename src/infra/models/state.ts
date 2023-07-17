@@ -3,8 +3,8 @@ export class StateModel {
   pivot_id: string;
   start_date: Date;
   end_date?: Date;
+  start_variable: string;
   is_off: boolean;
   status: string;
-  end_variable: string;
   timestamp: Date;
 }

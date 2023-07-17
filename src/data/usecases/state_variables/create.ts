@@ -52,7 +52,8 @@ export class CreateStateVariableUseCase implements IBaseUseCases {
 
     const lastState = await getLastStateVariable(variable?.state_id);
 
-    const statesEquals = this.checkLastStateEquals(lastState, variable);
+    const statesEquals =
+      lastState && this.checkLastStateEquals(lastState, variable);
 
     if (lastState && statesEquals) {
       this.#console.warn(
@@ -62,8 +63,6 @@ export class CreateStateVariableUseCase implements IBaseUseCases {
     }
 
     const stateEntity = this.createEntity({ ...variable });
-
-    console.log(stateEntity);
 
     return await this.#baseRepo.create<StateVariableModel>(
       DB_TABLES.STATE_VARIABLES,

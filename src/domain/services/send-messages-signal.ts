@@ -1,9 +1,10 @@
+import { CreateStateDto } from "@root/infra";
 import { StateModel } from "@root/infra/models";
 
 export type SendMessageSignalType = {
   users: string[];
   farm_name: string;
-  state: Partial<StateModel>;
+  state: CreateStateDto;
 };
 
 export type CloudMqttRemotePayloadType = {

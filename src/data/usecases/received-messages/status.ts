@@ -23,14 +23,17 @@ import {
 } from "@root/shared";
 
 export class ReceveidStatus implements IBaseUseCases {
+  #writeLogs: IWriteLogs;
   #checkPresure: CheckPressure;
   #saveLastState: IBaseUseCases;
   #createState: IBaseUseCases;
   #createVariable: IBaseUseCases;
   #actionObserver: IObservables;
   #angleObserver: IObservables;
+  #baseRepo: IBaseRepository;
 
   private initInstances() {
+    this.#writeLogs = Injector.get(INJECTOR_COMMONS.WRITE_LOGS);
     this.#checkPresure = Injector.get(INJECTOR_CASES.STATES.PRESSURE);
 
     this.#saveLastState = Injector.get(INJECTOR_CASES.PIVOTS.SAVE_LAST_STATE);
@@ -42,6 +45,7 @@ export class ReceveidStatus implements IBaseUseCases {
     this.#actionObserver = Injector.get(INJECTOR_OBSERVABLES.ACTION);
 
     this.#angleObserver = Injector.get(INJECTOR_OBSERVABLES.ANGLE_JOB);
+    this.#baseRepo = Injector.get<IBaseRepository>(INJECTOR_REPOS.BASE);
   }
 
   private async createState(
@@ -50,7 +54,7 @@ export class ReceveidStatus implements IBaseUseCases {
   ): Promise<StateModel> {
     return await this.#createState.execute({
       author,
-      message: state,
+      payload: state,
     });
   }
 
@@ -83,15 +87,14 @@ export class ReceveidStatus implements IBaseUseCases {
   }
 
   private async checkConnection(pivot_id: string) {
-    const baseRepo = Injector.get<IBaseRepository>(INJECTOR_REPOS.BASE);
-    const alreadyExists = await baseRepo.findLast<ConnectionModel>(
+    const alreadyExists = await this.#baseRepo.findLast<ConnectionModel>(
       DB_TABLES.CONNECTIONS,
       { pivot_id }
     );
 
     if (!alreadyExists || alreadyExists?.recovery_date) return;
 
-    await baseRepo.update<Partial<ConnectionModel>>(
+    await this.#baseRepo.update<Partial<ConnectionModel>>(
       DB_TABLES.CONNECTIONS,
       { id: alreadyExists.id },
       { recovery_date: new Date() }
@@ -101,14 +104,9 @@ export class ReceveidStatus implements IBaseUseCases {
   async execute(payload: string[]) {
     this.initInstances();
 
-    const [_, pivot_id, state, percent, angle, __] = payload;
+    const [_, pivot_id, state, percent, start_angle, angle, __] = payload;
 
-    Injector.get<IWriteLogs>(INJECTOR_COMMONS.WRITE_LOGS).write(
-      "MESSAGE",
-      pivot_id,
-      payload.join("-")
-    );
-
+    this.#writeLogs.write("MESSAGE", pivot_id, payload.join("-"));
     await checkPivotExist(pivot_id);
     await this.#saveLastState?.execute({ payload, isGateway: false });
     await this.checkConnection(pivot_id);
@@ -120,12 +118,12 @@ export class ReceveidStatus implements IBaseUseCases {
     this.#angleObserver.dispatch(pivot_id, Number(angle));
     const author = await this.#actionObserver.dispatch(pivot_id);
 
-    const newState =
-      (await this.createState(payload, author || null)) ||
-      (await getLastStateFull(pivot_id));
+    const newState = await this.createState(payload, author || null);
 
     if (!newState?.id) return;
 
-    await this.createVariable(newState?.id, percent, angle);
+    const variable = await this.createVariable(newState?.id, percent, angle);
+
+    return { state: newState, variable };
   }
 }

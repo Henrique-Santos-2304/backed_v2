@@ -1,7 +1,6 @@
 import { IAppLog, IObservables } from "@root/domain";
-import { ActionProps } from "@root/domain/usecases";
 import { Injector } from "@root/main/injector";
-import { IDPS, INJECTOR_COMMONS } from "@root/shared";
+import { IDPS, INJECTOR_COMMONS, splitMsgCloud } from "@root/shared";
 
 type Props = {
   timer?: NodeJS.Timeout;
@@ -12,7 +11,7 @@ type Props = {
 };
 
 type SubProps = {
-  action: ActionProps;
+  action: string;
   topic: string;
   message: string;
 };
@@ -21,8 +20,11 @@ export class CreateActionObservable implements IObservables {
   #action: Props[] = [];
 
   async dispatch(pivot_id: string) {
+    console.log("dispatch");
     const find = this.checkByPivot(pivot_id);
+    console.log("Finbded ", find);
     this.#action = this.#action.filter((ac) => ac.pivot_id !== pivot_id);
+    find?.timer && clearTimeout(find?.timer);
     return find?.author;
   }
 
@@ -56,6 +58,7 @@ export class CreateActionObservable implements IObservables {
         topic,
         message
       );
+
       await this.checkMessageReceived(
         { ...action, attempts: action.attempts + 1 },
         topic,
@@ -65,17 +68,22 @@ export class CreateActionObservable implements IObservables {
   }
 
   subscribe({ action, topic, message }: SubProps) {
-    const exists = this.checkByPivot(action?.pivot_id);
+    const { toList } = splitMsgCloud(action);
 
-    if (exists) this.exclude(action?.pivot_id);
+    console.log("------------------------List------------------------------");
+    console.log(toList);
+
+    const exists = this.checkByPivot(toList[1]);
+
+    if (exists) this.exclude(toList[1]);
 
     const newAction = {
-      pivot_id: action?.pivot_id,
-      author: action?.author,
+      pivot_id: toList[1],
+      author: toList[4] || "manual",
       idp: IDPS.COMANDS,
       attempts: 1,
     };
-
+    console.log("new Action---------------- ", newAction);
     this.#action.push(newAction);
     this.checkMessageReceived(newAction, topic, message);
   }

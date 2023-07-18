@@ -20,9 +20,7 @@ export class CreateActionObservable implements IObservables {
   #action: Props[] = [];
 
   async dispatch(pivot_id: string) {
-    console.log("dispatch");
     const find = this.checkByPivot(pivot_id);
-    console.log("Finbded ", find);
     this.#action = this.#action.filter((ac) => ac.pivot_id !== pivot_id);
     find?.timer && clearTimeout(find?.timer);
     return find?.author;
@@ -70,9 +68,6 @@ export class CreateActionObservable implements IObservables {
   subscribe({ action, topic, message }: SubProps) {
     const { toList } = splitMsgCloud(action);
 
-    console.log("------------------------List------------------------------");
-    console.log(toList);
-
     const exists = this.checkByPivot(toList[1]);
 
     if (exists) this.exclude(toList[1]);
@@ -83,7 +78,6 @@ export class CreateActionObservable implements IObservables {
       idp: IDPS.COMANDS,
       attempts: 1,
     };
-    console.log("new Action---------------- ", newAction);
     this.#action.push(newAction);
     this.checkMessageReceived(newAction, topic, message);
   }

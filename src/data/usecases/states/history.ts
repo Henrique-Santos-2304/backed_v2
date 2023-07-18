@@ -1,128 +1,17 @@
-import { IAppDate, IBaseRepository, IBaseUseCases } from "@root/domain";
-import { IStateVariableRepo } from "@root/domain/repos";
-
-import { StateModel } from "@root/infra/models";
 import { Injector } from "@root/main/injector";
-import { DB_TABLES, INJECTOR_COMMONS, INJECTOR_REPOS } from "@root/shared";
-import {
-  IGetStateHistoryExec,
-  PartialCycleResponse,
-} from "@root/domain/usecases";
-
-const initialCycle = {
-  states: [],
-  percentimeters: [],
-  angles: [],
-} as unknown as PartialCycleResponse;
+import { CycleResponseType, IStateRepo } from "@root/domain/repos";
+import { checkPivotExist } from "../pivots/helpers";
+import { IAppDate, IBaseUseCases } from "@root/domain";
+import { INJECTOR_COMMONS, INJECTOR_REPOS } from "@root/shared";
+import { IGetStateHistoryExec } from "@root/domain/usecases";
 
 export class GetHistoryStateOfPivot implements IBaseUseCases {
   #appDate: IAppDate;
-  #baseRepo: IBaseRepository;
-
-  #variableRepo: IStateVariableRepo;
-
-  #response: PartialCycleResponse[] = [];
-  #currentCycle: PartialCycleResponse = initialCycle;
-  #stateIsRunning: boolean = false;
+  #state: IStateRepo;
 
   private initInstances() {
     this.#appDate = Injector.get(INJECTOR_COMMONS.APP_DATE);
-    this.#baseRepo = Injector.get(INJECTOR_REPOS.BASE);
-
-    this.#variableRepo = Injector.get(INJECTOR_REPOS.STATE_VARIABLES);
-  }
-
-  private initCycleState(state: StateModel) {
-    this.#stateIsRunning = true;
-    this.#currentCycle = {
-      ...this.#currentCycle,
-      start_date: this.#appDate.toDateSpString(state.timestamp),
-      is_running: true,
-      start_state: {
-        power: state.power || false,
-        water: state.water || false,
-        start_angle: state.start_angle || 0,
-        direction: state.direction || "CLOCKWISE",
-      },
-      states: [
-        ...this.#currentCycle?.states,
-        {
-          power: state.power || false,
-          water: state.water || false,
-          direction: state.direction || "CLOCKWISE",
-          start_angle: state.start_angle || 0,
-          timestamp: this.#appDate.toDateSpString(state.timestamp),
-          connection: state.connection || false,
-          author: state?.author,
-        },
-      ],
-    };
-  }
-
-  private continueActualState(state: StateModel) {
-    this.#currentCycle = {
-      ...this.#currentCycle,
-      is_running: state?.power,
-      end_date: !state?.power
-        ? this.#appDate.toDateSpString(state?.timestamp)
-        : "",
-      states: [
-        ...this.#currentCycle?.states,
-        {
-          power: state.power || false,
-          water: state.water || false,
-          direction: state.direction || "CLOCKWISE",
-          start_angle: state.start_angle || 0,
-          timestamp: this.#appDate.toDateSpString(state.timestamp),
-          connection: state.connection || false,
-          author: state?.author,
-        },
-      ],
-    };
-
-    if (!state.power) {
-      this.#stateIsRunning = false;
-      this.#response.push(this.#currentCycle);
-      this.#currentCycle = initialCycle;
-    }
-  }
-
-  private async mountState(state: StateModel) {
-    if (!this.#stateIsRunning && !state?.power) return;
-
-    if (!this.#stateIsRunning && state?.power) {
-      return this.initCycleState(state);
-    }
-
-    return this.continueActualState(state);
-  }
-
-  private async mountVariable(state_id: string) {
-    const variables = await this.#variableRepo?.getVariableGroupBy(state_id);
-
-    if (variables?.length <= 0) return;
-
-    for (const variable of variables) {
-      this.#currentCycle = {
-        ...this.#currentCycle,
-        percentimeters: [
-          ...this.#currentCycle.percentimeters,
-          {
-            value: variable.percentimeter! || 0,
-            timestamp: this.#appDate.toDateSpString(variable.timestamp!),
-            state_id,
-          },
-        ],
-        angles: [
-          ...this.#currentCycle.angles,
-          {
-            value: variable.angle! || 0,
-            timestamp: this.#appDate.toDateSpString(variable.timestamp!),
-            state_id,
-          },
-        ],
-      };
-    }
+    this.#state = Injector.get(INJECTOR_REPOS.STATE);
   }
 
   execute: IGetStateHistoryExec = async ({
@@ -132,27 +21,28 @@ export class GetHistoryStateOfPivot implements IBaseUseCases {
   }) => {
     this.initInstances();
 
+    await checkPivotExist(pivot_id);
+
     const startDate = this.#appDate.handleDateToHistories(start_date, 0);
     const endDate = this.#appDate.handleDateToHistories(end_date, 24);
 
-    const states = (await this.#baseRepo.findAllByData(DB_TABLES.STATES, {
-      pivot_id,
-      timestamp: { gte: startDate, lt: endDate },
-    })) as unknown as StateModel[];
+    const states = await this.#state.getCycles(pivot_id, startDate, endDate);
 
-    if (!states || states.length <= 0) {
-      console.warn("Não exitem alterações de estado nesse periodo.\n");
-      return [] as PartialCycleResponse[];
-    }
+    const listState = states.map((s) => ({
+      status: s.status,
+      start_date: this.#appDate.toDateSpString(s.start_date),
+      end_date: s.end_date ? this.#appDate.toDateSpString(s.end_date) : null,
+      is_off: s.is_off,
+      id: s.id,
+      pivot_id: s.pivot_id,
+      cycles: s.cycles?.map((c) => c.status),
+      variables: s.variables?.map((v) => ({
+        angle: v.angle,
+        percentimeter: v.percentimeter,
+        timestamp: this.#appDate.toDateSpString(v.timestamp),
+      })),
+    }));
 
-    for (let state of states) {
-      await this.mountState(state);
-
-      await this.mountVariable(state?.state_id);
-    }
-
-    if (this.#stateIsRunning) this.#response.push(this.#currentCycle);
-
-    return this.#response.reverse();
+    return listState as unknown as Partial<CycleResponseType>[];
   };
 }

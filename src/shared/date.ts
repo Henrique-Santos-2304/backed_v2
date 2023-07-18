@@ -33,7 +33,6 @@ export class AppDate implements IAppDate {
     const [day, month, year] = date.split("-");
     const ha = this.#instance(`${year}-${month}-${day}`)
       .tz("America/Sao_Paulo")
-      .add(1, "day")
       .second(0)
       .hour(hour)
       .minute(0)
@@ -47,7 +46,7 @@ export class AppDate implements IAppDate {
 
   dateSpString() {
     const dateString = this.#instance().format(this.#format);
-    return dateString.replace(" ", " ás ");
+    return dateString;
   }
 
   dateNow() {
@@ -58,7 +57,7 @@ export class AppDate implements IAppDate {
     const dateString = this.#instance(date)
       .tz(this.#timezone)
       .format(this.#format);
-    return dateString.replace(" ", " ás ");
+    return dateString;
   }
 
   catchDiff(date: Date | null) {

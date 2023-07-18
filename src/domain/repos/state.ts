@@ -1,9 +1,13 @@
-import { StateModel } from "@root/infra/models";
+import { CycleModel, StateModel, StateVariableModel } from "@root/infra/models";
 
+export type CycleResponseType = StateModel & {
+  cycles: CycleModel[];
+  variables: StateVariableModel[];
+};
 export interface IStateRepo {
-  getHistoryCycle(
+  getCycles(
     pivot_id: string,
-    start: Date,
-    end: Date
-  ): Promise<StateModel[]>;
+    start_date: Date,
+    end_date: Date
+  ): Promise<CycleResponseType[]>;
 }

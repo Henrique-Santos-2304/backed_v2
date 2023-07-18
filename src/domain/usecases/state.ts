@@ -1,36 +1,16 @@
 import { StateModel } from "@root/infra/models";
 import { IBaseUseCases, IIsGateway } from "../bases";
+import { CycleResponseType } from "../repos";
 
-type ValueVariables = {
-  value: number;
-  timestamp: Date | string;
-  state_id: string;
-};
-
-type OmitterState = Omit<StateModel, "state_id" | "pivot_id" | "timestamp"> & {
-  timestamp: string;
-};
-export type PartialCycleResponse = {
-  start_date: string;
-  end_date: string;
-  is_running: boolean;
-  start_state: Pick<
-    StateModel,
-    "power" | "water" | "start_angle" | "direction"
-  >;
-  states: OmitterState[];
-  percentimeters: Array<ValueVariables>;
-  angles: Array<ValueVariables>;
-};
-
+type CyclePartial = Partial<CycleResponseType>;
 export type IGetStateHistoryExec = IBaseUseCases<
   { pivot_id: string; start_date: string; end_date: string },
-  PartialCycleResponse[]
+  CyclePartial[]
 >["execute"];
 
 export type ActionProps = {
   pivot_id: string;
-  direction: StateModel["direction"];
+  direction: string;
   power: boolean;
   water: boolean;
   percentimeter: boolean;

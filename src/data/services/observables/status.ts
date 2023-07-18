@@ -40,7 +40,7 @@ export class StatusObservable implements IObservables {
 
     setTimeout(() => {
       this.checkListener(sub);
-    }, 5000);
+    }, 3000);
   }
 
   async dispatch(follow: string) {

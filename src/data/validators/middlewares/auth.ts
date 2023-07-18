@@ -17,6 +17,7 @@ const authMiddleware = (
 ) => {
   try {
     const console = Injector.get<IAppLog>(INJECTOR_COMMONS.APP_LOGS);
+
     const token = req.headers.authorization;
     if (!token) {
       console.error("Nenhum token encontrado");

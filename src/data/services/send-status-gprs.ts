@@ -1,23 +1,17 @@
 import {
-  IAppLog,
-  IBaseRepository,
   IBaseUseCases,
-  IIotConnect,
   IObservables,
   StatusObservablesType,
 } from "@root/domain";
 import { checkPivotExist } from "../usecases/pivots/helpers";
 import {
-  DB_TABLES,
   IDPS,
   INJECTOR_CASES,
   INJECTOR_COMMONS,
   INJECTOR_OBSERVABLES,
-  INJECTOR_REPOS,
 } from "@root/shared";
-import { ConnectionModel, PivotModel } from "@root/infra/models";
+import { PivotModel } from "@root/infra/models";
 import { Injector } from "@root/main/injector";
-import { MutationConnectionVO } from "@root/infra";
 
 export class CheckStatusGprs implements IBaseUseCases {
   #observable: IObservables<StatusObservablesType>;
@@ -69,5 +63,7 @@ export class CheckStatusGprs implements IBaseUseCases {
       attempts: 1,
       cbFail: this.failStatus,
     });
+
+    return `#${IDPS.STATUS}-${pivot_id}$`;
   }
 }

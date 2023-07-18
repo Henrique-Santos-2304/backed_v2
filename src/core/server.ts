@@ -14,7 +14,6 @@ import {
   injectUseCases,
   injectObservables,
 } from "@main/composers";
-import { prisma } from "./db";
 
 export class AppServer implements IAppServer {
   #app: Express;

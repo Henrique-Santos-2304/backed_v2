@@ -1,11 +1,6 @@
 import express from "express";
-import {
-  farmRoutes,
-  pivotRoutes,
-  schedulingsRoutes,
-  userRoutes,
-} from "./routes";
-import { cyclesRoutes } from "./routes/state";
+import { farmRoutes, pivotRoutes, userRoutes } from "./routes";
+import { stateRoutes } from "./routes/state";
 import { radioVariablesRoutes } from "./routes/radio-variables";
 import { Injector } from "@root/main/injector";
 import { IBaseController } from "@root/domain";
@@ -32,13 +27,13 @@ export const expressRouters = () =>
     .use("/users", userRoutes())
     .use("/farms", farmRoutes())
     .use("/pivots", pivotRoutes())
+    .use("/states", stateRoutes())
     .get("api-status", (req, res) => {
       res.sendStatus(200);
     });
-/*     .use("/cycles", cyclesRoutes())
-    .use("/radio_variables", radioVariablesRoutes())
-    .use("/schedulings", schedulingsRoutes())
-    .use("/actions", actionsRoutes()); */
+/*     .use("/radio_variables", radioVariablesRoutes())
+    .use("/schedulings", schedulingsRoutes()) */
+/* .use("/actions", actionsRoutes());  */
 
 /*
 router.use('/states', stateRoute);

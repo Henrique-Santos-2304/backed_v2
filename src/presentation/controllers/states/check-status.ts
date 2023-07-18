@@ -4,7 +4,7 @@ import { controllerAdapter } from "@root/main";
 import { Injector } from "@root/main/injector";
 import { INJECTOR_CASES } from "@root/shared";
 
-export class CheckAllStatusController
+export class CheckStatusController
   implements IBaseController<{ pivots: PivotModel[] }>
 {
   handle: IBaseController<{ pivots: PivotModel[] }>["handle"] = async (
@@ -13,10 +13,9 @@ export class CheckAllStatusController
     next
   ) => {
     const callback = async () => {
-      console.log("Controller buscando pivos");
       return await Injector.get<IBaseUseCases>(
-        INJECTOR_CASES.STATES.CHECK_ALL_STATUS
-      ).execute({ pivots: request.body.pivots });
+        INJECTOR_CASES.STATES.CHECK_STATUS
+      ).execute(request.params.id);
     };
 
     return await controllerAdapter({ response, callback, next });

@@ -11,11 +11,9 @@ export class CreateActionController implements IBaseController<ActionProps> {
     next
   ) => {
     const callback = async () => {
-      console.log("controller");
-      console.log(request.body);
       return await Injector.get<IBaseUseCases>(
         INJECTOR_CASES.STATES.ACTION
-      ).execute({ action: { ...request.body, pivot_id: request.params.id } });
+      ).execute({ action: request.body?.data });
     };
 
     return await controllerAdapter({ response, callback, next });

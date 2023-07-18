@@ -20,8 +20,8 @@
     "migrate:test": "dotenv -e .env.test -- npx prisma migrate deploy",
     "test": "dotenv -e .env.test -- jest --passWithNoTests --silent --noStackTrace --runInBand --detectOpenHandles --forceExit",
     "test:e2e": "npm test -- --config jest-e2e.config.js",
-    "test_debug_watch:e2e": "dotenv -e .env.test -- jest --config jest-e2e.config.js --watch --passWithNoTests --noStackTrace --runInBand --detectOpenHandles --forceExit -- src/presentation/tests/check-status.spec.ts",
-    "test_watch:e2e": "npm run test:e2e -- --watch -- src/presentation/tests/check-status.spec.ts",
+    "test_debug_watch:e2e": "dotenv -e .env.test -- jest --config jest-e2e.config.js --watch --passWithNoTests --noStackTrace --runInBand --detectOpenHandles --forceExit -- src/presentation/controllers/states/tests/check_status.spec.ts",
+    "test_watch:e2e": "npm run test:e2e -- --watch ",
     "test:unit": "npm test -- --config jest-unit.config.js",
     "test_watch:unit": "npm run test:unit -- --watch",
     "test_debug_watch:unit": "dotenv -e .env.test -- jest --config jest-unit.config.js --watch --passWithNoTests --noStackTrace --runInBand --detectOpenHandles --forceExit"

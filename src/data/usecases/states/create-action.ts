@@ -43,6 +43,7 @@ export class CreateActionUseCase implements IBaseUseCases {
 
   execute: ICreateActionExecute = async ({ action, isGateway }) => {
     this.initInstances();
+    console.log(action);
     const { toList } = splitMsgCloud(action);
 
     if (toList?.length !== 5) throw new Error("Padrão de mensagem inválido");

@@ -1,6 +1,6 @@
 import { Injector } from "@root/main/injector";
 import {
-  CheckAllStatusController,
+  CheckStatusController,
   CreateActionController,
   GetHistoryCycleController,
 } from "@root/presentation";
@@ -10,7 +10,7 @@ import { INJECTOR_CONTROLS } from "@root/shared";
 export const injectStatesControls = async () => {
   Injector.add(new CreateActionController(), INJECTOR_CONTROLS.STATES.ACTION);
   Injector.add(
-    new CheckAllStatusController(),
+    new CheckStatusController(),
     INJECTOR_CONTROLS.STATES.CHECK_ALL_STATUS
   );
   Injector.add(

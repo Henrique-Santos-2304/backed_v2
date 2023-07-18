@@ -1,5 +1,5 @@
 export const splitMsgCloud = (message: string) => {
-  const withoutHash = message.split("#");
+  const withoutHash = message?.split("#");
 
   if (withoutHash?.length <= 0) {
     throw new Error("Padrão de mensagem inválido! ");
